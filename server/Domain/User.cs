@@ -11,6 +11,6 @@
         public string Email { get; set; }
         public string Password { get; set; }
         public List<Participation> Participations { get; set; } = new();
-
+        public List<Conversation> AdminAt { get; set; } = new();
     }
 }

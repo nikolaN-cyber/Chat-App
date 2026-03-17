@@ -22,6 +22,33 @@ namespace Core.Services
             _config = configuration;
         }
 
+        public async Task<ApiResponse<bool>> RegisterAsync(RegisterData request, CancellationToken cancellationToken)
+        {
+            var existingUser = await _context._users.AnyAsync(u => u.Email == request.Email || u.Username == request.Username, cancellationToken);
+            if (existingUser)
+            {
+                return ApiResponse<bool>.FailureResponse("User already exists");
+            }
+            var confirmPasswordCheck = request.Password == request.ConfirmPassword ? true : false;
+            if (!confirmPasswordCheck)
+            {
+                return ApiResponse<bool>.FailureResponse("Passwords do not match");
+            }
+            string hashedPassword = BCrypt.Net.BCrypt.EnhancedHashPassword(request.Password);
+            var newUser = new User
+            {
+                Username = request.Username,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Age = request.Age,
+                Email = request.Email,
+                Password = hashedPassword
+            };
+            _context._users.Add(newUser);
+            await _context.SaveChangesAsync(cancellationToken);
+            return ApiResponse<bool>.SuccessResponse(true);
+        }
+
         public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginData request, CancellationToken cancellationToken)
         {
             var user = await _context._users.FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);

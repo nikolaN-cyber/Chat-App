@@ -4,3 +4,16 @@
 *.user
 *.suo
 *.sln.docstates
+
+client/node_modules/
+client/.angular/
+client/dist/
+
+client/src/environments/environment.development.ts
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+.DS_Store
+.vscode/

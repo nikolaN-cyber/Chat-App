@@ -11,5 +11,7 @@ namespace Domain
         public bool IsGroup { get; set; }
         public List<Participation> Participants { get; set; } = new();
         public List<Message> Messages { get; set; } = new();
+        public int AdminId { get; set; }
+        public User? Admin { get; set; } = null;
     }
 }

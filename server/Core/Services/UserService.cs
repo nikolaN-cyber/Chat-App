@@ -17,40 +17,6 @@ namespace Core.Services
             _currentUserService = currentUserService;
         }
 
-        public async Task<ApiResponse<UserResponse>> RegisterAsync(RegisterData request, CancellationToken cancellationToken)
-        {
-            var existingUser = await _context._users.AnyAsync(u => u.Email == request.Email || u.Username == request.Username, cancellationToken);
-            if (existingUser)
-            {
-                return ApiResponse<UserResponse>.FailureResponse("User already exists");
-            }
-            var confirmPasswordCheck = request.Password == request.ConfirmPassword ? true : false;
-            if (!confirmPasswordCheck)
-            {
-                return ApiResponse<UserResponse>.FailureResponse("Passwords do not match");
-            }
-            string hashedPassword = BCrypt.Net.BCrypt.EnhancedHashPassword(request.Password);
-            var newUser = new User
-            {
-                Username = request.Username,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Age = request.Age,
-                Email = request.Email,
-                Password = hashedPassword
-            };
-            _context._users.Add(newUser);
-            await _context.SaveChangesAsync(cancellationToken);
-            return ApiResponse<UserResponse>.SuccessResponse(new UserResponse(
-                newUser.Id,
-                newUser.Username,
-                newUser.FirstName,
-                newUser.LastName,
-                newUser.Age,
-                newUser.Email
-            ), "User successfully registered");
-        }
-
         public async Task<ApiResponse<UserResponse>> EditAsync(EditUserData request, CancellationToken cancellationToken)
         {
             int currentUserId = _currentUserService.GetCurrentUserId();
@@ -93,19 +59,43 @@ namespace Core.Services
             return ApiResponse<List<UserSummaryResponse>>.SuccessResponse(users, "Users retreived successfully");
         }
 
-        public async Task<ApiResponse<string>> SendDirectMessage(MessageData request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<bool>> SendMessageAsync(MessageData request, CancellationToken cancellationToken)
         {
             int currentUserId = _currentUserService.GetCurrentUserId();
             if (currentUserId == 0)
             {
-                return ApiResponse<string>.FailureResponse("Unauthorized");
-            }
-            var conversation = await _context._conversation.FirstOrDefaultAsync(c => c.Id == request.ConversationId);
-            if (conversation == null)
-            {
-                return ApiResponse<string>.FailureResponse("Conversation does not exist");
+                return ApiResponse<bool>.FailureResponse("Unauthorized");
             }
 
+            var conversation = await _context._conversation.FirstOrDefaultAsync(c => c.Id == request.ConversationId, cancellationToken);
+            if (conversation == null)
+            {
+                return ApiResponse<bool>.FailureResponse("Conversation does not exist");
+            }
+
+            var message = new Message
+            {
+                Content = request.Content,
+                CreatedAt = DateTime.UtcNow,
+                AuthorId = currentUserId,
+                ConversationId = request.ConversationId
+            };
+
+            _context._messages.Add(message);
+            await _context.SaveChangesAsync(cancellationToken);
+            return ApiResponse<bool>.SuccessResponse(true);
+        }
+
+        public async Task<ApiResponse<List<UserSummaryResponse>>> FilterUsersByUsernameAsync(string filter, CancellationToken cancellationToken)
+        {
+            int currentUserId = _currentUserService.GetCurrentUserId();
+            if (currentUserId == 0)
+            {
+                return ApiResponse<List<UserSummaryResponse>>.FailureResponse("Unauthorized");
+            }
+            var cleanFilter = filter.Trim();
+            var users = await _context._users.Where(u => u.Username.StartsWith(cleanFilter)).Select(u => new UserSummaryResponse(u.Id, u.Username)).ToListAsync(cancellationToken);
+            return ApiResponse<List<UserSummaryResponse>>.SuccessResponse(users);
         }
     }
 }

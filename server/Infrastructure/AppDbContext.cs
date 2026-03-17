@@ -31,6 +31,12 @@ namespace Infrastructure
                     .WithMany(c => c.Participants)
                     .HasForeignKey(p => p.ConversationId);
             });
+
+            modelBuilder.Entity<Conversation>()
+                .HasOne(c => c.Admin)
+                .WithMany(u => u.AdminAt)
+                .HasForeignKey(c => c.AdminId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

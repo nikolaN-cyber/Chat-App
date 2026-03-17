@@ -1,6 +1,8 @@
-﻿using Infrastructure;
-using Microsoft.AspNetCore.Mvc;
+﻿using Core.DTOs;
 using Core.Interfaces;
+using Core.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace server.Controllers
 {
@@ -14,6 +16,18 @@ namespace server.Controllers
             _authService = service;
         }
 
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterData request, CancellationToken cancellationToken)
+        {
+            var result = await _authService.RegisterAsync(request, cancellationToken);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginData request, CancellationToken cancellationToken)
         {
@@ -22,7 +36,7 @@ namespace server.Controllers
             {
                 return BadRequest(result);
             }
-            return Ok(result);
+            return Ok(result.Data);
         }
     }
 }

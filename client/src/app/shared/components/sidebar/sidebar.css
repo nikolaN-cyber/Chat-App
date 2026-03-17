@@ -1,0 +1,14 @@
+.sidebar {
+  width: 300px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.active-chat {
+  background-color: rgba(0, 123, 255, 0.1) !important;
+  border-left: 4px solid #007bff;
+}
+
+.overflow-auto {
+  scrollbar-width: thin;
+}

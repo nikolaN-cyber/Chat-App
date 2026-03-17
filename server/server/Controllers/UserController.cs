@@ -1,5 +1,6 @@
-﻿using Core.Interfaces;
-using Domain;
+﻿using Azure.Core;
+using Core.DTOs;
+using Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,18 +15,6 @@ namespace server.Controllers
         public UserController(IUserService userService)
         {
             _userService = userService;
-        }
-
-        [AllowAnonymous]
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterData request, CancellationToken cancellationToken)
-        {
-            var result = await _userService.RegisterAsync(request, cancellationToken);
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-            return Ok(result);
         }
 
         [HttpPatch("edit")]
@@ -46,6 +35,30 @@ namespace server.Controllers
             var result = await _userService.GetAllUsersAsync(cancellationToken);
             if (!result.Success)
             {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+        [HttpPost("send-message")]
+        public async Task<IActionResult> SendMessage([FromBody] MessageData request, CancellationToken cancellationToken)
+        {
+            var result = await _userService.SendMessageAsync(request, cancellationToken);
+            if (!result.Success)
+            {
+                if (result.Message == "Unauthorized") return Unauthorized(result);
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+        [HttpGet("search-by-username")]
+        public async Task<IActionResult> FilterUsers([FromQuery] string filter, CancellationToken cancellationToken)
+        {
+            var result = await _userService.FilterUsersByUsernameAsync(filter, cancellationToken);
+            if (!result.Success)
+            {
+                if (result.Message == "Unauthorized") return Unauthorized(result);
                 return BadRequest(result);
             }
             return Ok(result);

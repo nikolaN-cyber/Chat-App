@@ -30,6 +30,9 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AdminId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsGroup")
                         .HasColumnType("bit");
 
@@ -38,6 +41,8 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AdminId");
 
                     b.ToTable("_conversation");
                 });
@@ -57,7 +62,7 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("ConversationId")
+                    b.Property<int>("ConversationId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
@@ -129,6 +134,17 @@ namespace Infrastructure.Migrations
                     b.ToTable("_users");
                 });
 
+            modelBuilder.Entity("Domain.Conversation", b =>
+                {
+                    b.HasOne("Domain.User", "Admin")
+                        .WithMany("AdminAt")
+                        .HasForeignKey("AdminId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Admin");
+                });
+
             modelBuilder.Entity("Domain.Message", b =>
                 {
                     b.HasOne("Domain.User", "Author")
@@ -137,11 +153,15 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Conversation", null)
+                    b.HasOne("Domain.Conversation", "Conversation")
                         .WithMany("Messages")
-                        .HasForeignKey("ConversationId");
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Author");
+
+                    b.Navigation("Conversation");
                 });
 
             modelBuilder.Entity("Domain.Participation", b =>
@@ -172,6 +192,8 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.User", b =>
                 {
+                    b.Navigation("AdminAt");
+
                     b.Navigation("Participations");
                 });
 #pragma warning restore 612, 618
