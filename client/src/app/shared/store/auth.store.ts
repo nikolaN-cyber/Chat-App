@@ -31,6 +31,7 @@ export const authStore = signalStore(
                                     error: err.error?.message || 'Login error',
                                     loading: false
                                 });
+                                console.log('Invalid credentials');
                             },
                         })
                     )
@@ -49,6 +50,11 @@ export const authStore = signalStore(
                     )
                 )
             )
-        )
+        ),
+        logout() {
+            patchState(store, {currentUser: null});
+            localStorage.removeItem('user');
+            router.navigate(["/"]);
+        }
     }))
 )

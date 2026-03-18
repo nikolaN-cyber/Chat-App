@@ -8,4 +8,5 @@ public record CreateConversationData(
     string Title, 
     List<int> participantIds
 );
-public record ConversationResponse(int Id, string Title, List<string> ParticipantNames);
+public record ConversationResponse(int Id, string Title, List<int> ParticipantIds, List<string> ParticipantNames);
+public record ConversationDetails(int Id, List<MessageResponse> Messages);

@@ -9,3 +9,9 @@ public record MessageData(
     [Range(1, int.MaxValue, ErrorMessage = "ConversationId must be a valid integer")]
     int ConversationId
 );
+
+public record MessageResponse(
+    string AuthorUsername,
+    string Content,
+    DateTime CreatedAt
+);

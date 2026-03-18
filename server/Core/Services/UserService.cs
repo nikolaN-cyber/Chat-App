@@ -59,19 +59,21 @@ namespace Core.Services
             return ApiResponse<List<UserSummaryResponse>>.SuccessResponse(users, "Users retreived successfully");
         }
 
-        public async Task<ApiResponse<bool>> SendMessageAsync(MessageData request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<MessageResponse>> SendMessageAsync(MessageData request, CancellationToken cancellationToken)
         {
             int currentUserId = _currentUserService.GetCurrentUserId();
-            if (currentUserId == 0)
-            {
-                return ApiResponse<bool>.FailureResponse("Unauthorized");
-            }
+            if (currentUserId == 0) return ApiResponse<MessageResponse>.FailureResponse("Unauthorized");
 
-            var conversation = await _context._conversation.FirstOrDefaultAsync(c => c.Id == request.ConversationId, cancellationToken);
-            if (conversation == null)
-            {
-                return ApiResponse<bool>.FailureResponse("Conversation does not exist");
-            }
+            var conversation = await _context._conversation
+                .Include(c => c.Participants)
+                .FirstOrDefaultAsync(c => c.Id == request.ConversationId, cancellationToken);
+
+            if (conversation == null) return ApiResponse<MessageResponse>.FailureResponse("Conversation does not exist");
+
+            if (!conversation.Participants.Any(p => p.UserId == currentUserId))
+                return ApiResponse<MessageResponse>.FailureResponse("Niste učesnik ove konverzacije");
+
+            var user = await _context._users.FirstAsync(u => u.Id == currentUserId);
 
             var message = new Message
             {
@@ -83,7 +85,14 @@ namespace Core.Services
 
             _context._messages.Add(message);
             await _context.SaveChangesAsync(cancellationToken);
-            return ApiResponse<bool>.SuccessResponse(true);
+
+            var response = new MessageResponse(
+                user.Username,
+                message.Content,
+                message.CreatedAt
+            );
+
+            return ApiResponse<MessageResponse>.SuccessResponse(response);
         }
 
         public async Task<ApiResponse<List<UserSummaryResponse>>> FilterUsersByUsernameAsync(string filter, CancellationToken cancellationToken)

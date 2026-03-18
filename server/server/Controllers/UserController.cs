@@ -49,7 +49,7 @@ namespace server.Controllers
                 if (result.Message == "Unauthorized") return Unauthorized(result);
                 return BadRequest(result);
             }
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpGet("search-by-username")]

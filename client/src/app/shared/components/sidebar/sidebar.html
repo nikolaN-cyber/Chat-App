@@ -9,32 +9,30 @@
   <div class="flex-grow-1 overflow-auto">
     <mat-nav-list>
       @for (conv of conversationsStore.conversations(); track conv.id) {
-        <a mat-list-item 
-           routerLinkActive="active-chat">
-          
-          <mat-icon matListItemIcon>
-            
-          </mat-icon>
-          
-          <div matListItemTitle class="fw-bold">
-            {{ conv.title || 'Privatni čet' }}
-          </div>
-          
-          <div matListItemLine class="text-muted small">
-             Kliknite za pregled poruka...
-          </div>
-        </a>
-      } @empty {
-        <div class="p-3 text-center text-muted">
-          <small>Nema aktivnih četova.</small>
+      <a [routerLink]="['/home/chat', conv.id]" [state]="{ data: conv }" routerLinkActive="active-chat" mat-list-item routerLinkActive="active-chat">
+
+        <mat-icon matListItemIcon>
+          person
+        </mat-icon>
+
+        <div matListItemTitle class="fw-bold">
+          {{ conv.title || 'Private chat' }}
         </div>
+
+      </a>
+      } @empty {
+      <div class="p-3 text-center text-muted">
+        <small>Nema aktivnih četova.</small>
+      </div>
       }
     </mat-nav-list>
   </div>
 
   <div class="p-3 border-top mt-auto">
     <div class="d-flex align-items-center gap-2">
-      <mat-icon>account_circle</mat-icon>
+      <button mat-icon-button>
+        <mat-icon (click)="authStore.logout()">logout</mat-icon>
+      </button>
       <span></span>
       <button mat-icon-button class="ms-auto" (click)="themeStore.toggleTheme()">
         <mat-icon>{{ themeStore.theme() === 'light' ? 'dark_mode' : 'light_mode' }}</mat-icon>

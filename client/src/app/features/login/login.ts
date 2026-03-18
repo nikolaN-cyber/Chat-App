@@ -13,7 +13,7 @@ export class Login {
   private authStore = inject(authStore)
 
   loginForm = this.fb.nonNullable.group({
-    username: ['', [Validators.required, Validators.minLength(8)]],
+    username: ['', [Validators.required]],
     password: ['', [Validators.required]]
   });
 

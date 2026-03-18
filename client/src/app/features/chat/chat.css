@@ -1,0 +1,31 @@
+.chat-wrapper {
+  background-color: #f8f9fa;
+}
+
+.messages-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.message-bubble {
+  max-width: 70%;
+  word-wrap: break-word;
+  position: relative;
+}
+
+.justify-content-end .message-bubble {
+  border-bottom-right-radius: 0 !important;
+}
+
+.message-row:not(.justify-content-end) .message-bubble {
+  border-bottom-left-radius: 0 !important;
+  border: 1px solid #dee2e6;
+}
+
+::ng-deep .no-wrapper-padding .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+.chat-footer mat-form-field {
+  margin-bottom: -1.25em;
+}

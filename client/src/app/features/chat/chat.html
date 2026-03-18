@@ -1,0 +1,54 @@
+<div class="chat-wrapper d-flex flex-column vh-100">
+
+    <header class="chat-header p-3 border-bottom d-flex align-items-center bg-white">
+        <mat-icon class="me-2 text-primary">account_circle</mat-icon>
+        <h6 class="m-0 fw-bold">
+            Konverzacija #{{ routeId() }}
+        </h6>
+    </header>
+
+        <div #scrollContainer class="messages-container flex-grow-1 overflow-auto p-3 bg-light">
+            @if (chatStore.loading()) {
+            <div class="d-flex justify-content-center align-items-center h-100">
+                <mat-spinner diameter="40"></mat-spinner>
+            </div>
+            } @else {
+            @for (msg of chatStore.messages(); track msg.createdAt) {
+            <div class="message-row d-flex mb-3"
+                [class.justify-content-end]="msg.authorUsername === authStore.currentUser()?.username">
+
+                <div class="message-bubble p-2 px-3 rounded-3 shadow-sm"
+                    [class.bg-primary]="msg.authorUsername === authStore.currentUser()?.username"
+                    [class.text-white]="msg.authorUsername === authStore.currentUser()?.username"
+                    [class.bg-white]="msg.authorUsername !== authStore.currentUser()?.username">
+
+                    <div class="small fw-bold mb-1" *ngIf="msg.authorUsername !== authStore.currentUser()?.username">
+                        {{ msg.authorUsername }}
+                    </div>
+
+                    <div class="message-content">{{ msg.content }}</div>
+
+                    <div class="message-time text-end" style="font-size: 0.7rem; opacity: 0.8;">
+                        {{ msg.createdAt | date:'HH:mm' }}
+                    </div>
+                </div>
+            </div>
+            } @empty {
+            <div class="d-flex justify-content-center align-items-center h-100 text-muted">
+                <p>Nema poruka. Započnite razgovor!</p>
+            </div>
+            }
+            }
+        </div>
+
+        <footer class="chat-footer p-3 border-top bg-white">
+            <form [formGroup]="sendMessageForm" (ngSubmit)="onSubmit()">
+                <div class="d-flex gap-2 align-items-center">
+                    <input formControlName="content" placeholder="Send message..." type="text">
+                    <button mat-fab color="primary" type="submit">
+                        <mat-icon>send</mat-icon>
+                    </button>
+                </div>
+            </form>
+        </footer>
+</div>

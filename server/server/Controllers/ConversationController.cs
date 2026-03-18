@@ -25,7 +25,7 @@ namespace server.Controllers
                 if (response.Message == "Unauthorized") return Unauthorized(response);
                 else return BadRequest(response);
             }
-            return Ok(response);
+            return Ok(response.Data);
         }
 
         [Authorize]

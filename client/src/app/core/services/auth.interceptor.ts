@@ -7,10 +7,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
  
   const token = AuthStore.currentUser()?.accessToken;
 
-  console.log(AuthStore.currentUser())
-
-  console.log(token);
-
   const excludedUrls = ['/api/Auth/login', '/api/Auth/register'];
   const isExcluded = excludedUrls.some(url => req.url.includes(url));
 
