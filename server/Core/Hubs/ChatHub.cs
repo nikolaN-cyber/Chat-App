@@ -1,6 +1,4 @@
-﻿using Core.DTOs;
-using Domain;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 
 namespace Core.Hubs
 {

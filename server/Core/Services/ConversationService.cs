@@ -18,76 +18,69 @@ namespace Core.Services
             _currentUserService = currentUserService;
         }
 
-        public async Task<ApiResponse<ConversationDetails>> GetOrCreateConversation(int targetUserId, CancellationToken cancellationToken)
+        public async Task<ApiResponse<ConversationDetails>> GetConversation(int conversationId, CancellationToken cancellationToken)
         {
             int currentUserId = _currentUserService.GetCurrentUserId();
             if (currentUserId == 0) return ApiResponse<ConversationDetails>.FailureResponse("Unauthorized");
+            var response = await _context._conversation
+                .Where(c => c.Id == conversationId)
+                .Select(c => new ConversationDetails(
+                    c.Id,
+                    c.Messages
+                        .OrderBy(m => m.CreatedAt)
+                        .Select(m => new MessageResponse(
+                            m.Author.Username ?? "Unknown",
+                            m.Content,
+                            m.CreatedAt
+                        )).ToList()
+                ))
+                .FirstOrDefaultAsync(cancellationToken);
 
-            var conversation = await _context._conversation
-                .Include(c => c.Participants).ThenInclude(p => p.User)
-                .Include(c => c.Messages).ThenInclude(m => m.Author)
-                .FirstOrDefaultAsync(c => !c.IsGroup &&
-                                          c.Participants.Any(p => p.UserId == currentUserId) &&
-                                          c.Participants.Any(p => p.UserId == targetUserId), cancellationToken);
-
-            if (conversation == null)
+            if (response == null)
             {
-                conversation = new Conversation
-                {
-                    IsGroup = false,
-                    Participants = new List<Participation>
-                    {
-                        new Participation { UserId = currentUserId, JoinedAt = DateTime.UtcNow },
-                        new Participation { UserId = targetUserId, JoinedAt = DateTime.UtcNow }
-                    },
-                    AdminId = currentUserId,
-                    Messages = new List<Message>()
-                };
-                _context._conversation.Add(conversation);
-                await _context.SaveChangesAsync(cancellationToken);
+                return ApiResponse<ConversationDetails>.FailureResponse("Conversation does not exist");
             }
-
-
-            var response = new ConversationDetails(
-                Id: conversation.Id,
-                Messages: (conversation.Messages ?? new List<Message>())
-                    .OrderBy(m => m.CreatedAt)
-                    .Select(m => new MessageResponse(
-                        m.Author?.Username ?? "Unknown",
-                        m.Content,
-                        m.CreatedAt
-                    )).ToList()
-            );
 
             return ApiResponse<ConversationDetails>.SuccessResponse(response);
         }
 
-        public async Task<ApiResponse<int>> CreateGroupConversation(CreateConversationData request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<ConversationResponse>> CreateConversation(CreateConversationData request, CancellationToken cancellationToken)
         {
             int currentUserId = _currentUserService.GetCurrentUserId();
-            if (currentUserId == 0)
-            {
-                return ApiResponse<int>.FailureResponse("Unauthorized");
-            }
+            if (currentUserId == 0) return ApiResponse<ConversationResponse>.FailureResponse("Unauthorized");
 
-            var participants = new List<Participation>();
+            var allParticipantIds = request.participantIds.ToList();
+            if (!allParticipantIds.Contains(currentUserId))
+                allParticipantIds.Add(currentUserId);
 
-            participants.Add(new Participation
+            if (allParticipantIds.Count == 2)
             {
-                UserId = currentUserId,
-                JoinedAt = DateTime.Now
-            });
+                var existingChat = await _context._conversation
+                    .Where(c => !c.IsGroup)
+                    .Where(c => c.Participants.All(p => allParticipantIds.Contains(p.UserId))
+                             && c.Participants.Count == 2)
+                    .Select(c => new ConversationResponse(
+                        c.Id,
+                        c.Participants.Where(p => p.UserId != currentUserId)
+                                     .Select(p => p.User.Username).FirstOrDefault() ?? "Private Chat",
+                        allParticipantIds,
+                        c.Participants.Select(p => p.User.Username).ToList()
+                    ))
+                    .FirstOrDefaultAsync(cancellationToken);
 
-            foreach (var userId in request.participantIds)
-            {
-                participants.Add(new Participation
+                if (existingChat != null)
                 {
-                    UserId = userId,
-                    JoinedAt = DateTime.UtcNow
-                });
+                    return ApiResponse<ConversationResponse>.SuccessResponse(existingChat, "Existing conversation returned");
+                }
             }
 
-            var newGroup = new Conversation
+            var participants = allParticipantIds.Select(id => new Participation
+            {
+                UserId = id,
+                JoinedAt = DateTime.UtcNow
+            }).ToList();
+
+            var newConversation = new Conversation
             {
                 Title = request.Title,
                 IsGroup = true,
@@ -95,10 +88,22 @@ namespace Core.Services
                 AdminId = currentUserId
             };
 
-            _context._conversation.Add(newGroup);
-
+            _context._conversation.Add(newConversation);
             await _context.SaveChangesAsync(cancellationToken);
-            return ApiResponse<int>.SuccessResponse(newGroup.Id, "Group chat created");
+
+            var participantData = await _context._users
+                .Where(u => allParticipantIds.Contains(u.Id))
+                .Select(u => u.Username)
+                .ToListAsync(cancellationToken);
+
+            var response = new ConversationResponse(
+                Id: newConversation.Id,
+                Title: newConversation.Title,
+                ParticipantIds: allParticipantIds,
+                ParticipantNames: participantData
+            );
+
+            return ApiResponse<ConversationResponse>.SuccessResponse(response, "Group chat created");
         }
 
         public async Task<ApiResponse<List<ConversationResponse>>> GetUserConversationsAsync(CancellationToken cancellationToken)

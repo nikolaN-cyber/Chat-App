@@ -14,7 +14,7 @@ export class ConversationService{
         return this.http.get<ConversationResponse[]>(`${this.apiUrl}/get-all-user-conversations`);
     }
 
-    getPrivateChat(targetId: number){
-        return this.http.post<ConversationDetails>(`${this.apiUrl}/get-or-create-private/${targetId}`, {});
+    getConversation(conversationId: number){
+        return this.http.post<ConversationDetails>(`${this.apiUrl}/get-private/${conversationId}`, {});
     }
 }

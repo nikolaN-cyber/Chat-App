@@ -20,10 +20,10 @@ export const chatStore = signalStore(
         loadChat: rxMethod<number>(
             pipe(
                 tap(() => patchState(store, { loading: true })),
-                switchMap((id) =>
-                    conversationService.getPrivateChat(id).pipe(
+                switchMap((conversationId) =>
+                    conversationService.getConversation(conversationId).pipe(
                         tapResponse({
-                            next: (data) => { patchState(store, { messages: data.messages, currentConversationId: data.id, loading: false }) },
+                            next: (data) => { patchState(store, { messages: data.messages, currentConversationId: data.id, loading: false }), console.log(data.messages) },
                             error: (err: any) => { patchState(store, { error: err.error?.message || "Error while loading messages", loading: false }) }
                         })
                     )

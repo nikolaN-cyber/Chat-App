@@ -67,14 +67,12 @@ export class Chat {
         this.signalrService.joinConversation(currentId);
       }, 500);
 
+      console.log(currentId);
       const selectedConv = this.convStore.conversations()?.find(c => c.id === currentId);
       this.selectedConvTitle.set(selectedConv?.title || "Private chat");
-      const myId = this.authStore.currentUser()?.id;
-      const targetId = selectedConv?.participantIds.find(pid => pid !== myId);
 
-      if (targetId) {
-        untracked(() => { this.chatStore.loadChat(targetId) });
-      }
+      untracked(() => { this.chatStore.loadChat(currentId)});
+      
     });
 
     effect(() => {

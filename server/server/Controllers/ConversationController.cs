@@ -16,10 +16,10 @@ namespace server.Controllers
         }
 
         [Authorize]
-        [HttpPost("get-or-create-private/{targetUserId}")]
-        public async Task<IActionResult> GetOrCreateDirectConversation([FromRoute] int targetUserId, CancellationToken cancellationToken)
+        [HttpPost("get-private/{targetUserId}")]
+        public async Task<IActionResult> GetDirectConversation([FromRoute] int targetUserId, CancellationToken cancellationToken)
         {
-            var response = await _conversationService.GetOrCreateConversation(targetUserId, cancellationToken);
+            var response = await _conversationService.GetConversation(targetUserId, cancellationToken);
             if (!response.Success)
             {
                 if (response.Message == "Unauthorized") return Unauthorized(response);
