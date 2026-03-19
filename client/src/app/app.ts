@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { authStore } from './shared/store/auth.store';
+import { ChatSignalRService } from './core/services/chat-signalr.service';
 
 @Component({
   selector: 'app-root',
@@ -10,4 +11,7 @@ import { authStore } from './shared/store/auth.store';
 })
 export class App {
   readonly authStore = inject(authStore);
+
+  constructor() {
+  }
 }

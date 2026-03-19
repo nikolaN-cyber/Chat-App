@@ -1,31 +1,56 @@
-.chat-wrapper {
-  background-color: #f8f9fa;
+.chat-header {
+  background-color: var(--border-color) !important;
 }
 
-.messages-container {
-  display: flex;
-  flex-direction: column;
+.chat-header-title{
+  color: var(--text-color);
 }
 
-.message-bubble {
-  max-width: 70%;
-  word-wrap: break-word;
-  position: relative;
+.messages-container{
+  background-color: var(--bg-color);
 }
 
-.justify-content-end .message-bubble {
-  border-bottom-right-radius: 0 !important;
+.my-message {
+  background-color: var(--border-color);
+  color: var(--text-color);
+  border-bottom-right-radius: 4px; 
+  margin-left: 50px;
 }
 
-.message-row:not(.justify-content-end) .message-bubble {
-  border-bottom-left-radius: 0 !important;
-  border: 1px solid #dee2e6;
+.other-message {
+  background-color: var(--border-color);
+  color: var(--text-color);
+  border-bottom-left-radius: 4px;
+  margin-right: 50px;
 }
 
-::ng-deep .no-wrapper-padding .mat-mdc-form-field-subscript-wrapper {
-  display: none;
+.author-name {
+  color: var(--text-color);
+  font-size: 0.8rem;
+  display: block;
 }
 
-.chat-footer mat-form-field {
-  margin-bottom: -1.25em;
+.chat-footer{
+  background-color: var(--border-color) !important;
+}
+
+.chat-input {
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border-radius: 25px;
+    padding: 10px 20px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.chat-input:focus {
+    border-color: var(--sidebar-color);
+    box-shadow: 0 0 5px rgba(64, 138, 113, 0.2);
+}
+
+.chat-footer button {
+    background-color: var(--sidebar-color);
+    flex-shrink: 0;
+    color: white;
 }

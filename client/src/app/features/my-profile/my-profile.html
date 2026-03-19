@@ -1,18 +1,12 @@
-<div class="container mt-5 pb-5">
-  <div class="row g-4">
-    
-    <div class="col-12 col-lg-4">
+<div class="my-profile-container h-100 pb-5 d-flex justify-content-center align-items-center">
       <mat-card class="profile-card text-center p-4 shadow-sm border-0">
         <h3 class="fw-bold mb-0">{{ user()?.username }}</h3>
         <hr>
         <div class="text-start mt-3">
           <div class="d-flex align-items-center mb-2">
-            <mat-icon class="me-2 text-primary">email</mat-icon>
+            <mat-icon class="me-2">email</mat-icon>
             <span>{{ user()?.email }}</span>
           </div>
         </div>
       </mat-card>
-    </div>
-
-  </div>
 </div>

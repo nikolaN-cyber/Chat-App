@@ -1,0 +1,9 @@
+.my-profile-container{
+    background-color: var(--bg-color);
+}
+
+.profile-card {
+    background-color: var(--sidebar-color);
+    color: white;
+}
+

@@ -1,0 +1,3 @@
+.sidebar button[mat-icon-button] {
+  color: var(--text-color);
+}

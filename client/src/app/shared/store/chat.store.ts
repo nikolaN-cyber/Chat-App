@@ -9,7 +9,7 @@ import { Message } from "../../core/models/message";
 import { UserService } from "../../core/services/user.service";
 
 export const chatStore = signalStore(
-    {providedIn: 'root'},
+    { providedIn: 'root' },
     withState({
         messages: [] as MessageResponse[],
         currentConversationId: null as number | null,
@@ -19,12 +19,12 @@ export const chatStore = signalStore(
     withMethods((store, conversationService = inject(ConversationService), userService = inject(UserService)) => ({
         loadChat: rxMethod<number>(
             pipe(
-                tap(() => patchState(store, {loading: true})),
-                switchMap((id) => 
+                tap(() => patchState(store, { loading: true })),
+                switchMap((id) =>
                     conversationService.getPrivateChat(id).pipe(
                         tapResponse({
-                            next: (data) => { patchState(store, {messages: data.messages, currentConversationId: data.id, loading: false}) },
-                            error: (err: any) => { patchState(store, {error: err.error?.message || "Error while loading messages", loading: false}) }
+                            next: (data) => { patchState(store, { messages: data.messages, currentConversationId: data.id, loading: false }) },
+                            error: (err: any) => { patchState(store, { error: err.error?.message || "Error while loading messages", loading: false }) }
                         })
                     )
                 )
@@ -32,16 +32,21 @@ export const chatStore = signalStore(
         ),
         sendMessage: rxMethod<Message>(
             pipe(
-                tap(() => patchState(store, {loading: true})),
-                switchMap((message) => 
+                tap(() => patchState(store, { loading: true })),
+                switchMap((message) =>
                     userService.sendMessage(message).pipe(
                         tapResponse({
-                            next: (response) => { const messageFromServer = response; patchState(store, (state) => ({messages: [...state.messages, messageFromServer], loading: false, error: null}) ) },
-                            error: (err: any) => { patchState(store, {error: err.error?.message || "Error while loading a message"}) }
+                            next: (response) => { const messageFromServer = response; patchState(store, {loading: false, error: null})},
+                            error: (err: any) => { patchState(store, { error: err.error?.message || "Error while loading a message" }) }
                         })
                     )
                 )
             )
-        )
+        ),
+        addMessage(newMessage: any) {
+            patchState(store, (state) => ({
+                messages: [...state.messages, newMessage]
+            }));
+        }
     }))
 )

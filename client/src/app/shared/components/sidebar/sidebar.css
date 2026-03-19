@@ -1,14 +1,43 @@
 .sidebar {
   width: 300px;
-  background-color: var(--bg-color);
-  color: var(--text-color);
+  background-color: var(--sidebar-color);
+  color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+.sidebar .border-bottom, 
+.sidebar .border-top {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.conversation-container {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+}
+
+.conversation-container:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff !important;
 }
 
 .active-chat {
-  background-color: rgba(0, 123, 255, 0.1) !important;
-  border-left: 4px solid #007bff;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border-left: 4px solid #ffffff; 
 }
 
-.overflow-auto {
-  scrollbar-width: thin;
+.sidebar mat-icon {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.conv-title {
+  color: #ffffff;
+  font-size: 0.95rem;
+}
+
+.sidebar button[mat-icon-button] {
+  color: #ffffff;
+}
+
+body.dark-theme .sidebar {
+  border-right: 1px solid var(--border-color);
 }

@@ -2,20 +2,20 @@
 :root {
   --bg-color: #ffffff;
   --text-color: #212529;
-  --sidebar-bg: #f8f9fa;
   --border-color: #dee2e6;
-  --chat-bubble-me: #007bff;
+  --chat-bubble-me: #460a43;
   --chat-bubble-other: #e9ecef;
+  --sidebar-color: #460a43;
 }
 
 
 body.dark-theme {
-  --bg-color: #121212;
+  --bg-color: #091413;
   --text-color: #e1e1e1;
-  --sidebar-bg: #1e1e1e;
   --border-color: #333333;
-  --chat-bubble-me: #0d6efd;
-  --chat-bubble-other: #2c2c2c;
+  --chat-bubble-me: #460a43;
+  --chat-bubble-other: #ffffff;
+  --sidebar-color: #460a43;
 }
 
 

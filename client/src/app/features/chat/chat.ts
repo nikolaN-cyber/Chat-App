@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, untracked } from '@angular/core';
+import { Component, effect, ElementRef, inject, input, signal, untracked, ViewChild } from '@angular/core';
 import { conversationsStore } from '../../shared/store/conversations.store';
 import { chatStore } from '../../shared/store/chat.store';
 import { authStore } from '../../shared/store/auth.store';
@@ -13,6 +13,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
+import { ChatSignalRService } from '../../core/services/chat-signalr.service';
 
 @Component({
   selector: 'app-chat',
@@ -33,14 +34,17 @@ import { map } from 'rxjs';
 })
 export class Chat {
 
+  selectedConvTitle = signal('');
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef;
+
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
 
   routeId = toSignal(
-  this.route.paramMap.pipe(
-    map(params => Number(params.get('id')))
-  )
-);
+    this.route.paramMap.pipe(
+      map(params => Number(params.get('id')))
+    )
+  );
 
   sendMessageForm = this.fb.nonNullable.group({
     content: ['', [Validators.required, Validators.maxLength(500)]],
@@ -49,31 +53,54 @@ export class Chat {
   readonly chatStore = inject(chatStore);
   readonly convStore = inject(conversationsStore);
   readonly authStore = inject(authStore);
+  private signalrService = inject(ChatSignalRService);
 
   constructor() {
+
+    this.signalrService.startConnection();
+
     effect(() => {
       const currentId = this.routeId();
       if (currentId === undefined || currentId === null) return;
 
+      setTimeout(() => {
+        this.signalrService.joinConversation(currentId);
+      }, 500);
+
       const selectedConv = this.convStore.conversations()?.find(c => c.id === currentId);
+      this.selectedConvTitle.set(selectedConv?.title || "Private chat");
       const myId = this.authStore.currentUser()?.id;
       const targetId = selectedConv?.participantIds.find(pid => pid !== myId);
 
       if (targetId) {
         untracked(() => { this.chatStore.loadChat(targetId) });
       }
-    })
+    });
+
+    effect(() => {
+      const messages = this.chatStore.messages();
+      if (messages.length > 0) {
+        untracked(() => {
+          setTimeout(() => this.scrollToBottom(), 100);
+        });
+      }
+    });
+  }
+
+  private scrollToBottom() {
+    if (this.scrollContainer) {
+      const el = this.scrollContainer.nativeElement;
+      el.scrollTop = el.scrollHeight;
+    }
   }
 
   onSubmit() {
     const currentConvId = this.routeId();
-
     if (this.sendMessageForm.valid && currentConvId) {
       const messagePayload = {
         content: this.sendMessageForm.controls.content.value,
         conversationId: currentConvId
       };
-
       this.chatStore.sendMessage(messagePayload);
       this.sendMessageForm.reset();
     }

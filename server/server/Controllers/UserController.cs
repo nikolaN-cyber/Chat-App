@@ -1,8 +1,10 @@
 ﻿using Azure.Core;
 using Core.DTOs;
+using Core.Hubs;
 using Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace server.Controllers
 {
@@ -12,9 +14,11 @@ namespace server.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        public UserController(IUserService userService)
+        private readonly IHubContext<ChatHub> _hubContext;
+        public UserController(IUserService userService, IHubContext<ChatHub> hubContext)
         {
             _userService = userService;
+            _hubContext = hubContext;
         }
 
         [HttpPatch("edit")]
@@ -49,6 +53,9 @@ namespace server.Controllers
                 if (result.Message == "Unauthorized") return Unauthorized(result);
                 return BadRequest(result);
             }
+            await _hubContext.Clients
+                    .Group(request.ConversationId.ToString())
+                    .SendAsync("ReceiveMessage", result.Data);
             return Ok(result.Data);
         }
 
