@@ -19,6 +19,20 @@
   color: #ffffff !important;
 }
 
+.conversation-container:hover .conv-title,
+.conversation-container:hover mat-icon,
+.conversation-container:hover .mat-mdc-list-item-title {
+  color: #ffffff !important;
+}
+
+.active-chat .conv-title,
+.active-chat mat-icon,
+.active-chat .mat-mdc-list-item-title,
+.active-chat .mat-mdc-list-item-unscoped-content {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
 .active-chat {
   background-color: rgba(255, 255, 255, 0.2);
   color: #ffffff;

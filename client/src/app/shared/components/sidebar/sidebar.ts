@@ -1,4 +1,4 @@
-import { Component, effect, inject, OnInit } from '@angular/core';
+import { Component, computed, effect, inject, OnInit } from '@angular/core';
 import { conversationsStore } from '../../store/conversations.store';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -24,6 +24,14 @@ export class Sidebar {
   readonly conversationsStore = inject(conversationsStore);
   readonly themeStore = inject(themeStore);
   readonly authStore = inject(authStore);
+
+  readonly privateChats = computed(() => 
+  (this.conversationsStore.conversations() ?? []).filter(c => !c.isGroup)
+);
+
+readonly groupChats = computed(() => 
+  (this.conversationsStore.conversations() ?? []).filter(c => c.isGroup)
+);
 
   constructor() {
     effect(() => {

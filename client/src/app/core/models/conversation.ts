@@ -1,6 +1,7 @@
 export interface ConversationResponse {
     id: number;
     title: string;
+    isGroup: boolean,
     participantIds: number[];
     participantNames: string[];
 }

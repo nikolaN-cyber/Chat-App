@@ -8,30 +8,44 @@
 
   <div class="flex-grow-1 overflow-auto">
     <mat-nav-list>
-      @for (conv of conversationsStore.conversations(); track conv.id) {
-      <a class="conversation-container" [routerLink]="['/home/chat', conv.id]" [state]="{ data: conv }" routerLinkActive="active-chat" mat-list-item routerLinkActive="active-chat">
-
-        <mat-icon matListItemIcon>
-          person
-        </mat-icon>
-
-        <div matListItemTitle class="conv-title fw-bold">
-          {{ conv.title || 'Private chat' }}
-        </div>
-
-      </a>
-      } @empty {
-      <div class="p-3 text-center text-muted">
-        <small>Inbox is empty.</small>
-      </div>
+      
+      @if (privateChats().length) {
+        <div mat-subheader class="section-header">Direct Messages</div>
+        @for (conv of privateChats(); track conv.id) {
+          <a class="conversation-container" [routerLink]="['/home/chat', conv.id]" [state]="{ data: conv }" routerLinkActive="active-chat" mat-list-item>
+            <mat-icon matListItemIcon>person</mat-icon>
+            <div matListItemTitle class="conv-title fw-bold">
+              {{ conv.title || 'Private chat' }}
+            </div>
+          </a>
+        }
       }
+
+      @if (groupChats().length) {
+        <div mat-subheader class="section-header">Groups</div>
+        @for (conv of groupChats(); track conv.id) {
+          <a class="conversation-container" [routerLink]="['/home/chat', conv.id]" [state]="{ data: conv }" routerLinkActive="active-chat" mat-list-item>
+            <mat-icon matListItemIcon>groups</mat-icon>
+            <div matListItemTitle class="conv-title fw-bold">
+              {{ conv.title }}
+            </div>
+          </a>
+        }
+      }
+
+      @if (!conversationsStore.conversations()?.length && !conversationsStore.loading()) {
+        <div class="p-3 text-center text-muted">
+          <small>Inbox is empty.</small>
+        </div>
+      }
+      
     </mat-nav-list>
   </div>
 
   <div class="p-3 border-top mt-auto">
     <div class="d-flex align-items-center gap-2">
-      <button mat-icon-button>
-        <mat-icon (click)="authStore.logout()">logout</mat-icon>
+      <button mat-icon-button (click)="authStore.logout()">
+        <mat-icon>logout</mat-icon>
       </button>
       <span></span>
       <button mat-icon-button class="ms-auto" (click)="themeStore.toggleTheme()">

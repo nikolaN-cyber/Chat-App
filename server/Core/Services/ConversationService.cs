@@ -20,28 +20,41 @@ namespace Core.Services
 
         public async Task<ApiResponse<ConversationDetails>> GetConversation(int conversationId, CancellationToken cancellationToken)
         {
-            int currentUserId = _currentUserService.GetCurrentUserId();
-            if (currentUserId == 0) return ApiResponse<ConversationDetails>.FailureResponse("Unauthorized");
-            var response = await _context._conversation
-                .Where(c => c.Id == conversationId)
-                .Select(c => new ConversationDetails(
-                    c.Id,
-                    c.Messages
-                        .OrderBy(m => m.CreatedAt)
-                        .Select(m => new MessageResponse(
-                            m.Author != null ? (m.Author.Username ?? "Unknown") : "Unknown",
-                            m.Content,
-                            m.CreatedAt
-                        )).ToList()
-                ))
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (response == null)
+            try
             {
-                return ApiResponse<ConversationDetails>.FailureResponse("Conversation does not exist");
-            }
+                int currentUserId = _currentUserService.GetCurrentUserId();
+                if (currentUserId == 0) return ApiResponse<ConversationDetails>.FailureResponse("Unauthorized");
 
-            return ApiResponse<ConversationDetails>.SuccessResponse(response);
+                var response = await _context._conversation
+                    .AsNoTracking()
+                    .Where(c => c.Id == conversationId)
+                    .Select(c => new ConversationDetails(
+                        c.Id,
+                        c.Messages
+                            .OrderBy(m => m.CreatedAt)
+                            .Select(m => new MessageResponse(
+                                m.Author != null ? (m.Author.Username ?? "Unknown") : "Unknown",
+                                m.Content,
+                                m.CreatedAt
+                            )).ToList()
+                    ))
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (response == null) return ApiResponse<ConversationDetails>.FailureResponse("Conversation does not exist");
+
+                return ApiResponse<ConversationDetails>.SuccessResponse(response);
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine($"Upit za konverzaciju {conversationId} je otkazan od strane klijenta.");
+                return ApiResponse<ConversationDetails>.FailureResponse("Request was cancelled by user.");
+            }
+            catch (Exception ex)
+            {
+                var detailedError = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                Console.WriteLine($"Kritična greška: {detailedError}");
+                return ApiResponse<ConversationDetails>.FailureResponse($"Server error: {ex.Message}");
+            }
         }
 
         public async Task<ApiResponse<ConversationResponse>> CreateConversation(CreateConversationData request, CancellationToken cancellationToken)
@@ -67,6 +80,7 @@ namespace Core.Services
                         c.Id,
                         c.Participants.Where(p => p.UserId != currentUserId)
                                       .Select(p => p.User.FirstName + " " + p.User.LastName).FirstOrDefault() ?? "Private Chat",
+                        c.IsGroup,
                         allParticipantIds,
                         c.Participants.Select(p => p.User.Username).ToList()
                     ))
@@ -109,6 +123,7 @@ namespace Core.Services
             var response = new ConversationResponse(
                 Id: newConversation.Id,
                 Title: isGroup ? newConversation.Title : otherUser != null ? $"{otherUser.FirstName} {otherUser.LastName}".Trim() : "Private Chat",
+                IsGroup: newConversation.IsGroup,
                 ParticipantIds: allParticipantIds,
                 ParticipantNames: participantData.Select(u => u.Username).ToList()
             );
@@ -118,33 +133,40 @@ namespace Core.Services
 
         public async Task<ApiResponse<List<ConversationResponse>>> GetUserConversationsAsync(CancellationToken cancellationToken)
         {
-            int currentUserId = _currentUserService.GetCurrentUserId();
-            if (currentUserId == 0)
+            try
             {
-                return ApiResponse<List<ConversationResponse>>.FailureResponse("Unauthorized");
+                int currentUserId = _currentUserService.GetCurrentUserId();
+                if (currentUserId == 0) return ApiResponse<List<ConversationResponse>>.FailureResponse("Unauthorized");
+
+                var query = _context._conversation
+                    .AsNoTracking()
+                    .Where(c => c.Participants.Any(p => p.UserId == currentUserId))
+                    .Select(c => new ConversationResponse
+                    (
+                        c.Id,
+                        c.IsGroup
+                            ? (c.Title ?? "Group Chat")
+                            : (c.Participants
+                                .Where(p => p.UserId != currentUserId)
+                                .Select(p => p.User != null
+                                    ? (p.User.FirstName + " " + p.User.LastName).Trim()
+                                    : "Private Chat")
+                                .FirstOrDefault() ?? "Private Chat"),
+                        c.IsGroup,
+                        c.Participants.Select(p => p.UserId).ToList(),
+                        c.Participants.Select(p => p.User != null
+                            ? (p.User.FirstName ?? "User")
+                            : "Unknown").ToList()
+                    ));
+
+                var conversations = await query.ToListAsync(cancellationToken);
+                return ApiResponse<List<ConversationResponse>>.SuccessResponse(conversations);
             }
-
-            var conversations = await _context._conversation
-                .AsNoTracking()
-                .Where(c => c.Participants.Any(p => p.UserId == currentUserId))
-                .Select(c => new ConversationResponse
-                (
-                    c.Id,
-                    c.IsGroup
-                        ? (c.Title ?? "Group Chat")
-                        : (c.Participants
-                            .Where(p => p.UserId != currentUserId)
-                            .Select(p => p.User != null
-                                ? (p.User.FirstName + " " + p.User.LastName).Trim()
-                                : "Private Chat")
-                            .FirstOrDefault() ?? "Private Chat"),
-
-                    c.Participants.Select(p => p.UserId).ToList(),
-                    c.Participants.Select(p => p.User != null
-                        ? (p.User.FirstName ?? "User")
-                        : "Unknown").ToList()
-                )).ToListAsync(cancellationToken);
-            return ApiResponse<List<ConversationResponse>>.SuccessResponse(conversations);
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message;
+                return ApiResponse<List<ConversationResponse>>.FailureResponse($"Greška: {ex.Message}. Detalji: {innerMessage}");
+            }
         }
 
         public async Task<ApiResponse<bool>> DeleteConversationAsync(int ConversationId, CancellationToken cancellationToken)

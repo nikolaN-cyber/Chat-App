@@ -50,6 +50,17 @@ export class ChatSignalRService {
         }
     }
 
+    public async leaveConversation(conversationId: number) {
+        if (this.hubConnection?.state === signalR.HubConnectionState.Connected) {
+            try {
+                await this.hubConnection.invoke('LeaveConversation', conversationId);
+                console.log(`SignalR: Left conversation ${conversationId}`);
+            } catch (err) {
+                console.error('SignalR Error while leaving:', err);
+            }
+        }
+    }
+
     public stopConnection() {
         this.hubConnection?.stop();
     }

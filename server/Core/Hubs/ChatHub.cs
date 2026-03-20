@@ -22,5 +22,10 @@ namespace Core.Hubs
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, conversationId.ToString());
         }
+
+        public async Task LeaveConversation(int conversationId)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, conversationId.ToString());
+        }
     }
 }

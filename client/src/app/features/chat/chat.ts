@@ -1,4 +1,4 @@
-import { Component, effect, ElementRef, inject, input, signal, untracked, ViewChild } from '@angular/core';
+import { Component, effect, ElementRef, inject, input, OnDestroy, signal, untracked, ViewChild } from '@angular/core';
 import { conversationsStore } from '../../shared/store/conversations.store';
 import { chatStore } from '../../shared/store/chat.store';
 import { authStore } from '../../shared/store/auth.store';
@@ -32,7 +32,7 @@ import { ChatSignalRService } from '../../core/services/chat-signalr.service';
   templateUrl: './chat.html',
   styleUrl: './chat.css',
 })
-export class Chat {
+export class Chat implements OnDestroy {
 
   selectedConvTitle = signal('');
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
@@ -57,22 +57,19 @@ export class Chat {
 
   constructor() {
 
-    this.signalrService.startConnection();
-
     effect(() => {
       const currentId = this.routeId();
       if (currentId === undefined || currentId === null) return;
 
-      setTimeout(() => {
-        this.signalrService.joinConversation(currentId);
-      }, 500);
-
-      console.log(currentId);
       const selectedConv = this.convStore.conversations()?.find(c => c.id === currentId);
       this.selectedConvTitle.set(selectedConv?.title || "Private chat");
 
-      untracked(() => { this.chatStore.loadChat(currentId)});
-      
+      untracked(() => {
+        if (this.chatStore.currentConversationId() !== currentId) {
+          this.chatStore.loadChat(currentId);
+        } 
+        this.signalrService.joinConversation(currentId);
+      });
     });
 
     effect(() => {
@@ -106,8 +103,15 @@ export class Chat {
 
   deleteChat() {
     const currentConvId = this.routeId();
-    if (currentConvId && confirm("Are you sure that you want to delete this chat?")){
+    if (currentConvId && confirm("Are you sure that you want to delete this chat?")) {
       this.convStore.deleteConversation(currentConvId);
+    }
+  }
+
+  ngOnDestroy(): void {
+    const currentId = this.routeId();
+    if (currentId) {
+      this.signalrService.leaveConversation(currentId);
     }
   }
 }

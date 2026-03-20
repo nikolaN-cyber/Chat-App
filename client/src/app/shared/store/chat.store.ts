@@ -23,7 +23,7 @@ export const chatStore = signalStore(
                 switchMap((conversationId) =>
                     conversationService.getConversation(conversationId).pipe(
                         tapResponse({
-                            next: (data) => { patchState(store, { messages: data.messages, currentConversationId: data.id, loading: false }), console.log(data.messages) },
+                            next: (data) => { patchState(store, { messages: data.messages, currentConversationId: data.id, loading: false }) },
                             error: (err: any) => { patchState(store, { error: err.error?.message || "Error while loading messages", loading: false }) }
                         })
                     )

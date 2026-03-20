@@ -11,7 +11,9 @@ import { ChatSignalRService } from './core/services/chat-signalr.service';
 })
 export class App {
   readonly authStore = inject(authStore);
+  private signalrService = inject(ChatSignalRService);
 
   constructor() {
+    this.signalrService.startConnection();
   }
 }
