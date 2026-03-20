@@ -1,21 +1,21 @@
 
 :root {
-  --bg-color: #ffffff;
+  --bg-color: #f3f2e0;
   --text-color: #212529;
   --border-color: #dee2e6;
-  --chat-bubble-me: #460a43;
+  --chat-bubble-me: #1B3C53;
   --chat-bubble-other: #e9ecef;
-  --sidebar-color: #460a43;
+  --sidebar-color: #1B3C53;
 }
 
 
 body.dark-theme {
-  --bg-color: #091413;
+  --bg-color: #162524;
   --text-color: #e1e1e1;
   --border-color: #333333;
-  --chat-bubble-me: #460a43;
+  --chat-bubble-me: #1B3C53;
   --chat-bubble-other: #ffffff;
-  --sidebar-color: #460a43;
+  --sidebar-color: #1B3C53;
 }
 
 

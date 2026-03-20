@@ -1,6 +1,37 @@
-<form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-    <h2>Login</h2>
-    <input formControlName="username" placeholder="Username" type="text">
-    <input formControlName="password" placeholder="Password" type="password">
-    <button type="submit">Login</button>
-</form>
+<div class="login-wrapper vh-100 d-flex justify-content-center align-items-center">
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="w-100" style="max-width: 400px;">
+    
+    <mat-card class="login-card p-4 shadow-sm border-0">
+      <mat-card-header class="justify-content-center mb-3">
+        <mat-card-title class="fw-bold fs-3">Login</mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content class="d-flex flex-column gap-3">
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Username</mat-label>
+          <input matInput formControlName="username" placeholder="Unesite korisničko ime">
+          <mat-icon matSuffix>person</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Password</mat-label>
+          <input matInput formControlName="password" [type]="'password'" placeholder="Unesite lozinku">
+          <mat-icon matSuffix>lock</mat-icon>
+        </mat-form-field>
+
+      </mat-card-content>
+
+      <mat-card-actions class="flex-column gap-2 px-3 pb-3">
+        <button mat-flat-button color="primary" type="submit" class="w-100 py-4 fs-6" [disabled]="loginForm.invalid">
+          PRIJAVI SE
+        </button>
+        
+        <a [routerLink]="['/register']" mat-button class="mt-2">
+          Nemate nalog? Registrujte se
+        </a>
+      </mat-card-actions>
+
+    </mat-card>
+  </form>
+</div>
