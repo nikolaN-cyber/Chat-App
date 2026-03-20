@@ -49,61 +49,71 @@ namespace Core.Services
             int currentUserId = _currentUserService.GetCurrentUserId();
             if (currentUserId == 0) return ApiResponse<ConversationResponse>.FailureResponse("Unauthorized");
 
-            var allParticipantIds = request.participantIds.ToList();
+            var allParticipantIds = request.participantIds.Distinct().ToList();
             if (!allParticipantIds.Contains(currentUserId))
                 allParticipantIds.Add(currentUserId);
 
-            if (allParticipantIds.Count == 2)
+            bool isGroup = allParticipantIds.Count > 2 || !string.IsNullOrWhiteSpace(request.Title);
+
+            if (!isGroup)
             {
+                int otherUserId = allParticipantIds.First(id => id != currentUserId);
+
                 var existingChat = await _context._conversation
-                    .Where(c => !c.IsGroup)
-                    .Where(c => c.Participants.All(p => allParticipantIds.Contains(p.UserId))
-                             && c.Participants.Count == 2)
+                    .Where(c => !c.IsGroup && c.Participants.Count == 2)
+                    .Where(c => c.Participants.Any(p => p.UserId == currentUserId) &&
+                                c.Participants.Any(p => p.UserId == otherUserId))
                     .Select(c => new ConversationResponse(
                         c.Id,
                         c.Participants.Where(p => p.UserId != currentUserId)
-                                     .Select(p => p.User.Username).FirstOrDefault() ?? "Private Chat",
+                                      .Select(p => p.User.FirstName + " " + p.User.LastName).FirstOrDefault() ?? "Private Chat",
                         allParticipantIds,
                         c.Participants.Select(p => p.User.Username).ToList()
                     ))
                     .FirstOrDefaultAsync(cancellationToken);
-
                 if (existingChat != null)
                 {
-                    return ApiResponse<ConversationResponse>.SuccessResponse(existingChat, "Existing conversation returned");
+                    return ApiResponse<ConversationResponse>.SuccessResponse(existingChat, "Učitana postojeća konverzacija");
                 }
             }
 
-            var participants = allParticipantIds.Select(id => new Participation
-            {
-                UserId = id,
-                JoinedAt = DateTime.UtcNow
-            }).ToList();
-
             var newConversation = new Conversation
             {
-                Title = request.Title,
-                IsGroup = true,
-                Participants = participants,
-                AdminId = currentUserId
+                IsGroup = isGroup,
+                Title = isGroup ? request.Title : null,
+                AdminId = currentUserId,
+                Participants = allParticipantIds.Select(id => new Participation
+                {
+                    UserId = id,
+                    JoinedAt = DateTime.UtcNow
+                }).ToList()
             };
 
-            _context._conversation.Add(newConversation);
-            await _context.SaveChangesAsync(cancellationToken);
+            try
+            {
+                _context._conversation.Add(newConversation);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<ConversationResponse>.FailureResponse($"Greška pri upisu u bazu: {ex.Message}");
+            }
 
             var participantData = await _context._users
                 .Where(u => allParticipantIds.Contains(u.Id))
-                .Select(u => u.Username)
+                .Select(u => new { u.Id, u.Username, u.FirstName, u.LastName })
                 .ToListAsync(cancellationToken);
+
+            var otherUser = participantData.FirstOrDefault(u => u.Id != currentUserId);
 
             var response = new ConversationResponse(
                 Id: newConversation.Id,
-                Title: newConversation.Title,
+                Title: isGroup ? newConversation.Title : otherUser != null ? $"{otherUser.FirstName} {otherUser.LastName}".Trim() : "Private Chat",
                 ParticipantIds: allParticipantIds,
-                ParticipantNames: participantData
+                ParticipantNames: participantData.Select(u => u.Username).ToList()
             );
 
-            return ApiResponse<ConversationResponse>.SuccessResponse(response, "Group chat created");
+            return ApiResponse<ConversationResponse>.SuccessResponse(response, isGroup ? "Grupa kreirana" : "Privatni čet kreiran");
         }
 
         public async Task<ApiResponse<List<ConversationResponse>>> GetUserConversationsAsync(CancellationToken cancellationToken)

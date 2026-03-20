@@ -1,4 +1,5 @@
-﻿using Core.Interfaces;
+﻿using Core.DTOs;
+using Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,6 +34,19 @@ namespace server.Controllers
         public async Task<IActionResult> GetUserConversations(CancellationToken cancellationToken)
         {
             var response = await _conversationService.GetUserConversationsAsync(cancellationToken);
+            if (!response.Success)
+            {
+                if (response.Message == "Unauthorized") return Unauthorized(response);
+                else return BadRequest(response);
+            }
+            return Ok(response.Data);
+        }
+
+        [Authorize]
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateConversation([FromBody] CreateConversationData request, CancellationToken cancellationToken)
+        {
+            var response = await _conversationService.CreateConversation(request, cancellationToken);
             if (!response.Success)
             {
                 if (response.Message == "Unauthorized") return Unauthorized(response);

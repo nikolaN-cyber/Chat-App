@@ -1,10 +1,11 @@
 import { patchState, signalStore, withMethods, withState } from "@ngrx/signals";
-import { ConversationResponse } from "../../core/models/conversation";
+import { ConversationResponse, CreateConversationData } from "../../core/models/conversation";
 import { ConversationService } from "../../core/services/conversations.service";
 import { rxMethod } from "@ngrx/signals/rxjs-interop";
 import { pipe, switchMap, tap } from "rxjs";
 import { inject } from "@angular/core";
 import { tapResponse } from "@ngrx/operators";
+import { Router } from "@angular/router";
 
 export const conversationsStore = signalStore(
     { providedIn: 'root' },
@@ -13,7 +14,7 @@ export const conversationsStore = signalStore(
         loading: false as boolean | null,
         error: null as string | null
     }),
-    withMethods((store, conversationService = inject(ConversationService)) => ({
+    withMethods((store, conversationService = inject(ConversationService), router = inject(Router)) => ({
         getUserConversations: rxMethod<void>(
             pipe(
                 tap(() => patchState(store, { loading: true })),
@@ -22,6 +23,34 @@ export const conversationsStore = signalStore(
                         tapResponse({
                             next: (data) => { patchState(store, { conversations: data, loading: false }) },
                             error: (err: any) => { patchState(store, { loading: false, error: err.error?.message }) }
+                        })
+                    )
+                )
+            )
+        ),
+        createConversation: rxMethod<CreateConversationData>(
+            pipe(
+                tap(() => { patchState(store, { loading: true }) }),
+                switchMap((request) =>
+                    conversationService.createConversation(request).pipe(
+                        tapResponse({
+                            next: (data) => {
+                                patchState(store, (state) => {
+                                    const exists = state.conversations?.some(c => c.id === data.id);
+                                    if (exists) {
+                                        return { loading: false };
+                                    }
+                                    return {
+                                        conversations: state.conversations
+                                            ? [...state.conversations, data]
+                                            : [data],
+                                        loading: false,
+                                        error: null
+                                    };
+                                });
+                                router.navigate(['home/chat', data.id]);
+                            },
+                            error: (err: any) => { patchState(store, { error: err.error?.message, loading: false }) }
                         })
                     )
                 )

@@ -1,1 +1,37 @@
-<p>create-conversation works!</p>
+<div class="create-chat-container">
+    <mat-form-field class="w-100" appearance="outline">
+        <mat-label>Dodaj učesnike</mat-label>
+        <mat-chip-grid #chipGrid>
+            @for (user of selectedUsers(); track user.id) {
+            <mat-chip-row (removed)="remove(user)">
+                {{ user.username }}
+                <button matChipRemove><mat-icon>cancel</mat-icon></button>
+            </mat-chip-row>
+            }
+        </mat-chip-grid>
+        <input placeholder="Search users..." #userInput [matChipInputFor]="chipGrid" [matAutocomplete]="auto" (input)="onSearchChange($event)" />
+        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event); userInput.value = ''">
+            @if (userStore.loading()) {
+                <mat-option disabled><mat-spinner diameter="20"></mat-spinner></mat-option>
+            }
+            @for (user of userStore.filteredUsers(); track user.id) {
+                <mat-option [value]="user">{{ user.username }}</mat-option>
+            }
+        </mat-autocomplete>
+    </mat-form-field>
+
+    @if (selectedUsers().length > 0) {
+        <mat-form-field class="w-100" appearance="outline">
+            <mat-label>Naslov grupe (opciono za privatne)</mat-label>
+            <input matInput (input)="groupTitle.set($any($event.target).value)" [value]="groupTitle()" />
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" (click)="createChat()" [disabled]="conversationStore.loading()">
+            @if (conversationStore.loading()) { 
+                Slanje... 
+            } @else { 
+                Kreiraj čet 
+            }
+        </button>
+    }
+</div>

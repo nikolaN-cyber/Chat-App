@@ -10,6 +10,11 @@ export interface ConversationDetails {
     messages: MessageResponse[];
 }
 
+export interface CreateConversationData {
+    title: string;
+    participantIds: number[];
+}
+
 export interface MessageResponse {
     authorUsername: string;
     content: string;

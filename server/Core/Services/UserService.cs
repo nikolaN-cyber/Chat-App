@@ -102,6 +102,10 @@ namespace Core.Services
             {
                 return ApiResponse<List<UserSummaryResponse>>.FailureResponse("Unauthorized");
             }
+            if (filter == "")
+            {
+                return ApiResponse<List<UserSummaryResponse>>.SuccessResponse(new List<UserSummaryResponse>());
+            }
             var cleanFilter = filter.Trim();
             var users = await _context._users.Where(u => u.Username.StartsWith(cleanFilter)).Select(u => new UserSummaryResponse(u.Id, u.Username)).ToListAsync(cancellationToken);
             return ApiResponse<List<UserSummaryResponse>>.SuccessResponse(users);

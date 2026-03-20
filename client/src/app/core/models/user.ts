@@ -22,3 +22,8 @@ export interface LoginResponse{
     email: string;
     accessToken: string;
 }
+
+export interface UserSearchResponse{
+    id: number;
+    username: string;
+}

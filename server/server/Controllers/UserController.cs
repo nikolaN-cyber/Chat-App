@@ -60,15 +60,15 @@ namespace server.Controllers
         }
 
         [HttpGet("search-by-username")]
-        public async Task<IActionResult> FilterUsers([FromQuery] string filter, CancellationToken cancellationToken)
+        public async Task<IActionResult> FilterUsers([FromQuery] string? filter, CancellationToken cancellationToken)
         {
-            var result = await _userService.FilterUsersByUsernameAsync(filter, cancellationToken);
+            var result = await _userService.FilterUsersByUsernameAsync(filter ?? "", cancellationToken);
             if (!result.Success)
             {
                 if (result.Message == "Unauthorized") return Unauthorized(result);
                 return BadRequest(result);
             }
-            return Ok(result);
+            return Ok(result.Data);
         }
     }
 }
