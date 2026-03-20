@@ -1,10 +1,15 @@
 <div class="chat-wrapper d-flex flex-column vh-100">
 
-    <header class="chat-header p-3 border-bottom d-flex align-items-center bg-white">
-        <mat-icon class="me-2">account_circle</mat-icon>
-        <h6 class="chat-header-title m-0 fw-bold">
-            {{selectedConvTitle()}}
-        </h6>
+    <header class="chat-header p-3 border-bottom d-flex align-items-center bg-white justify-content-between">
+        <div class="p-3 d-flex align-items-center ">
+            <mat-icon class="me-2">account_circle</mat-icon>
+            <h6 class="chat-header-title m-0 fw-bold">
+                {{selectedConvTitle()}}
+            </h6>
+        </div>
+        <button (click)="deleteChat()" [disabled]="convStore.loading()" title="Delete chat" mat-fab class="deleteChatIcon">
+            <mat-icon>delete</mat-icon>
+        </button>
     </header>
 
     <div #scrollContainer class="messages-container flex-grow-1 overflow-auto p-3 #scrollContainer">
@@ -42,7 +47,8 @@
     <footer class="chat-footer p-3 border-top bg-white">
         <form [formGroup]="sendMessageForm" (ngSubmit)="onSubmit()">
             <div class="d-flex gap-2 align-items-center w-100">
-                <input formControlName="content" placeholder="Send a message..." type="text" class="chat-input flex-grow-1">
+                <input formControlName="content" placeholder="Send a message..." type="text"
+                    class="chat-input flex-grow-1">
                 <button mat-fab color="primary" type="submit">
                     <mat-icon>send</mat-icon>
                 </button>

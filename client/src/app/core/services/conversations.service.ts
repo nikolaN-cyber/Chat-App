@@ -21,4 +21,8 @@ export class ConversationService{
     createConversation(data: CreateConversationData){
         return this.http.post<ConversationResponse>(`${this.apiUrl}/create`, data);
     }
+
+    deleteConversation(id: number){
+        return this.http.delete<boolean>(`${this.apiUrl}/delete/${id}`);
+    }
 }

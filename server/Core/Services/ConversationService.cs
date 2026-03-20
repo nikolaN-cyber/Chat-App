@@ -29,7 +29,7 @@ namespace Core.Services
                     c.Messages
                         .OrderBy(m => m.CreatedAt)
                         .Select(m => new MessageResponse(
-                            m.Author.Username ?? "Unknown",
+                            m.Author != null ? (m.Author.Username ?? "Unknown") : "Unknown",
                             m.Content,
                             m.CreatedAt
                         )).ToList()
@@ -123,14 +123,26 @@ namespace Core.Services
             {
                 return ApiResponse<List<ConversationResponse>>.FailureResponse("Unauthorized");
             }
+
             var conversations = await _context._conversation
+                .AsNoTracking()
                 .Where(c => c.Participants.Any(p => p.UserId == currentUserId))
                 .Select(c => new ConversationResponse
                 (
                     c.Id,
-                    c.IsGroup ? c.Title : c.Participants.Where(p => p.UserId != currentUserId).Select(p => p.User.FirstName + " " + p.User.LastName).FirstOrDefault(),
-                    c.Participants.Select(p => p.User.Id).ToList(),
-                    c.Participants.Select(p => p.User.FirstName).ToList()
+                    c.IsGroup
+                        ? (c.Title ?? "Group Chat")
+                        : (c.Participants
+                            .Where(p => p.UserId != currentUserId)
+                            .Select(p => p.User != null
+                                ? (p.User.FirstName + " " + p.User.LastName).Trim()
+                                : "Private Chat")
+                            .FirstOrDefault() ?? "Private Chat"),
+
+                    c.Participants.Select(p => p.UserId).ToList(),
+                    c.Participants.Select(p => p.User != null
+                        ? (p.User.FirstName ?? "User")
+                        : "Unknown").ToList()
                 )).ToListAsync(cancellationToken);
             return ApiResponse<List<ConversationResponse>>.SuccessResponse(conversations);
         }

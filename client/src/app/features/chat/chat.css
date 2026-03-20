@@ -54,3 +54,7 @@
     flex-shrink: 0;
     color: white;
 }
+
+.deleteChatIcon {
+  color: black;
+}

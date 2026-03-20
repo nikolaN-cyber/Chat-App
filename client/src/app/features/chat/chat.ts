@@ -103,4 +103,11 @@ export class Chat {
       this.sendMessageForm.reset();
     }
   }
+
+  deleteChat() {
+    const currentConvId = this.routeId();
+    if (currentConvId && confirm("Are you sure that you want to delete this chat?")){
+      this.convStore.deleteConversation(currentConvId);
+    }
+  }
 }

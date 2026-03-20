@@ -1,4 +1,5 @@
-﻿using Core.DTOs;
+﻿using Azure.Core;
+using Core.DTOs;
 using Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -47,6 +48,19 @@ namespace server.Controllers
         public async Task<IActionResult> CreateConversation([FromBody] CreateConversationData request, CancellationToken cancellationToken)
         {
             var response = await _conversationService.CreateConversation(request, cancellationToken);
+            if (!response.Success)
+            {
+                if (response.Message == "Unauthorized") return Unauthorized(response);
+                else return BadRequest(response);
+            }
+            return Ok(response.Data);
+        }
+
+        [Authorize]
+        [HttpDelete("delete/{id}")]
+        public async Task<IActionResult> DeleteConversation([FromRoute] int id, CancellationToken cancellationToken)
+        {
+            var response = await _conversationService.DeleteConversationAsync(id, cancellationToken);
             if (!response.Success)
             {
                 if (response.Message == "Unauthorized") return Unauthorized(response);

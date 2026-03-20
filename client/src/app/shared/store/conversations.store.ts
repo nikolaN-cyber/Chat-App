@@ -55,6 +55,34 @@ export const conversationsStore = signalStore(
                     )
                 )
             )
+        ),
+        deleteConversation: rxMethod<number>(
+            pipe(
+                tap(() => { patchState(store, { loading: true }) }),
+                switchMap((id) =>
+                    conversationService.deleteConversation(id).pipe(
+                        tapResponse({
+                            next: (data) => {
+                                patchState(store, (state) => {
+                                    return {
+                                        conversations: state.conversations ? state.conversations.filter(c => c.id !== id) : [],
+                                        loading: false,
+
+                                        error: null
+                                    }
+                                });
+                                router.navigate(['home']);
+                            },
+                            error: (err: any) => {
+                                patchState(store, {
+                                    loading: false,
+                                    error: err.error?.message || 'Greška pri brisanju konverzacije'
+                                });
+                            }
+                        })
+                    )
+                )
+            )
         )
     })),
 )
