@@ -10,13 +10,13 @@
         
         <mat-form-field appearance="outline">
           <mat-label>Username</mat-label>
-          <input matInput formControlName="username" placeholder="Unesite korisničko ime">
+          <input matInput formControlName="username" placeholder="Enter username">
           <mat-icon matSuffix>person</mat-icon>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Password</mat-label>
-          <input matInput formControlName="password" [type]="'password'" placeholder="Unesite lozinku">
+          <input matInput formControlName="password" [type]="'password'" placeholder="Enter password">
           <mat-icon matSuffix>lock</mat-icon>
         </mat-form-field>
 
@@ -24,11 +24,11 @@
 
       <mat-card-actions class="flex-column gap-2 px-3 pb-3">
         <button mat-flat-button color="primary" type="submit" class="w-100 py-4 fs-6" [disabled]="loginForm.invalid">
-          PRIJAVI SE
+          SIGN IN
         </button>
         
         <a [routerLink]="['/register']" mat-button class="mt-2">
-          Nemate nalog? Registrujte se
+          Dont't have an account yet? Register here
         </a>
       </mat-card-actions>
 

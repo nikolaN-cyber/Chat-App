@@ -6,6 +6,7 @@ import { rxMethod } from "@ngrx/signals/rxjs-interop";
 import { pipe, switchMap, tap } from "rxjs";
 import { tapResponse } from "@ngrx/operators";
 import { Router } from "@angular/router";
+import { themeStore } from "./theme.store";
 
 export const authStore = signalStore(
     { providedIn: 'root' },
@@ -14,7 +15,7 @@ export const authStore = signalStore(
         loading: false as boolean,
         error: null as string | null
     }),
-    withMethods((store, authService = inject(AuthService), router = inject(Router)) => ({
+    withMethods((store, authService = inject(AuthService), router = inject(Router), theme = inject(themeStore)) => ({
         login: rxMethod<UserLogin>(
             pipe(
                 tap(() => patchState(store, { loading: true, error: null })),
@@ -53,7 +54,8 @@ export const authStore = signalStore(
         ),
         logout() {
             patchState(store, {currentUser: null});
-            localStorage.removeItem('user');
+            theme.setLightTheme();
+            document.body.classList.remove('dark-theme');
             router.navigate(["/"]);
         }
     }))

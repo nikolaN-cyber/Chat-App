@@ -13,6 +13,11 @@ export const themeStore = signalStore(
             const newTheme = store.theme() === 'light' ? 'dark':'light';
             patchState(store, {theme: newTheme});
             localStorage.setItem('theme', newTheme);
+        },
+        setLightTheme() {
+            patchState(store, {theme: 'light'});
+            document.body.classList.remove('dark-theme');
+            localStorage.setItem('theme', 'light');
         }
     })),
     withHooks({

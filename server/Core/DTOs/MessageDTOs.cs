@@ -15,3 +15,5 @@ public record MessageResponse(
     string Content,
     DateTime CreatedAt
 );
+
+public record EmailMessage(string To, string Subject, string Body);
