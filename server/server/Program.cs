@@ -63,6 +63,7 @@ builder.Services.AddCors(options =>
         });
 });
 
+builder.Services.AddSingleton<IEmailQueue, EmailQueue>();
 builder.Services.AddScoped<IConversationService, ConversationService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
