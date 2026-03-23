@@ -27,7 +27,7 @@ export const userStore = signalStore(
                 switchMap((searchFilter) =>
                     userService.searchUsersByUsername(searchFilter).pipe(
                         tapResponse({
-                            next: (data) => { patchState(store, { filteredUsers: data, loading: false }) },
+                            next: (data) => { patchState(store, { filteredUsers: data, loading: false, error: null }) },
                             error: (err: any) => { patchState(store, { error: err.error?.message, loading: false }) }
                         })
                     )

@@ -1,7 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { environment } from "../../../environments/environment.development";
-import { ConversationDetails, ConversationResponse, CreateConversationData } from "../models/conversation";
+import { AddUsersRequest, ConversationDetails, ConversationResponse, CreateConversationData, ParticipantNames } from "../models/conversation";
 
 @Injectable({
     providedIn: 'root'
@@ -24,5 +24,13 @@ export class ConversationService{
 
     deleteConversation(id: number){
         return this.http.delete<boolean>(`${this.apiUrl}/delete/${id}`);
+    }
+
+    removeUser(userId: number, conversationId: number){
+        return this.http.delete<boolean>(`${this.apiUrl}/remove/${conversationId}/${userId}`);
+    }
+
+    addUsers(data: AddUsersRequest){
+        return this.http.post<ParticipantNames[]>(`${this.apiUrl}/add-users`, data);
     }
 }

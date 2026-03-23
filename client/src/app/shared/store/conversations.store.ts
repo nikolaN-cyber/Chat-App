@@ -21,7 +21,7 @@ export const conversationsStore = signalStore(
                 switchMap(() =>
                     conversationService.getUserConversations().pipe(
                         tapResponse({
-                            next: (data) => { patchState(store, { conversations: data, loading: false }) },
+                            next: (data) => { patchState(store, { conversations: data, loading: false, error: null }) },
                             error: (err: any) => { patchState(store, { loading: false, error: err.error?.message }) }
                         })
                     )
@@ -67,7 +67,6 @@ export const conversationsStore = signalStore(
                                     return {
                                         conversations: state.conversations ? state.conversations.filter(c => c.id !== id) : [],
                                         loading: false,
-
                                         error: null
                                     }
                                 });

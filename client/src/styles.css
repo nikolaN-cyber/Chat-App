@@ -1,4 +1,3 @@
-
 :root {
   --bg-color: #f3f2e0;
   --text-color: #212529;
@@ -8,7 +7,6 @@
   --sidebar-color: #1B3C53;
 }
 
-
 body.dark-theme {
   --bg-color: #162524;
   --text-color: #e1e1e1;
@@ -17,7 +15,6 @@ body.dark-theme {
   --chat-bubble-other: #ffffff;
   --sidebar-color: #1B3C53;
 }
-
 
 html, body {
   height: 100%;

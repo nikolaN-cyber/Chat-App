@@ -1,4 +1,4 @@
-import { Component, effect, ElementRef, inject, input, OnDestroy, signal, untracked, ViewChild } from '@angular/core';
+import { Component, effect, ElementRef, inject, OnDestroy, signal, untracked, ViewChild } from '@angular/core';
 import { conversationsStore } from '../../shared/store/conversations.store';
 import { chatStore } from '../../shared/store/chat.store';
 import { authStore } from '../../shared/store/auth.store';
@@ -10,7 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { ChatSignalRService } from '../../core/services/chat-signalr.service';
@@ -18,7 +18,6 @@ import { ChatSignalRService } from '../../core/services/chat-signalr.service';
 @Component({
   selector: 'app-chat',
   imports: [
-    MatIconModule,
     MatButtonModule,
     MatListModule,
     MatProgressSpinnerModule,
@@ -28,7 +27,8 @@ import { ChatSignalRService } from '../../core/services/chat-signalr.service';
     MatInputModule,
     CommonModule,
     ReactiveFormsModule,
-  ],
+    RouterLink
+],
   templateUrl: './chat.html',
   styleUrl: './chat.css',
 })

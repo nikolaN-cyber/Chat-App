@@ -1,20 +1,32 @@
-import { patchState, signalStore, withMethods, withState } from "@ngrx/signals";
-import { MessageResponse } from "../../core/models/conversation";
+import { patchState, signalStore, withComputed, withMethods, withState } from "@ngrx/signals";
+import { MessageResponse, ParticipantNames } from "../../core/models/conversation";
 import { ConversationService } from "../../core/services/conversations.service";
-import { inject } from "@angular/core";
+import { computed, inject } from "@angular/core";
 import { rxMethod } from "@ngrx/signals/rxjs-interop";
-import { pipe, switchMap, tap } from "rxjs";
+import { EMPTY, pipe, switchMap, tap } from "rxjs";
 import { tapResponse } from "@ngrx/operators";
 import { Message } from "../../core/models/message";
 import { UserService } from "../../core/services/user.service";
+import { authStore } from "./auth.store";
 
 export const chatStore = signalStore(
     { providedIn: 'root' },
     withState({
         messages: [] as MessageResponse[],
+        participants: [] as ParticipantNames[],
         currentConversationId: null as number | null,
+        adminId: null as number | null,
         loading: false as boolean,
         error: null as string | null
+    }),
+    withComputed((store) => {
+        const auth = inject(authStore);
+        return {
+            isAdmin: computed(() => {
+                const currentUser = auth.currentUser();
+                return currentUser?.id === store.adminId();
+            })
+        }
     }),
     withMethods((store, conversationService = inject(ConversationService), userService = inject(UserService)) => ({
         loadChat: rxMethod<number>(
@@ -23,7 +35,7 @@ export const chatStore = signalStore(
                 switchMap((conversationId) =>
                     conversationService.getConversation(conversationId).pipe(
                         tapResponse({
-                            next: (data) => { patchState(store, { messages: data.messages, currentConversationId: data.id, loading: false }) },
+                            next: (data) => { patchState(store, { messages: data.messages, participants: data.participants, currentConversationId: data.id, adminId: data.adminId, loading: false, error: null });},
                             error: (err: any) => { patchState(store, { error: err.error?.message || "Error while loading messages", loading: false }) }
                         })
                     )
@@ -41,6 +53,50 @@ export const chatStore = signalStore(
                         })
                     )
                 )
+            )
+        ),
+        addUsers: rxMethod<number[]>(
+            pipe(
+                tap(() => patchState(store, {loading: true})),
+                switchMap((userIds) => {
+                    const conversationId = store.currentConversationId();
+                    if (conversationId === null) {
+                        patchState(store, { loading: false, error: 'Conversation not chosen' });
+                        return EMPTY;
+                    }
+                    return conversationService.addUsers({userIds, conversationId}).pipe(
+                        tapResponse({
+                            next: (data) => { patchState(store, (state) => ({
+                                participants: [...state.participants, ...data],
+                                loading: false,
+                                error: null
+                            })) },
+                            error: (err: any) => { patchState(store, {loading: false, error: err.error?.message}) }
+                        })
+                    )
+                })
+            )
+        ),
+        removeUser: rxMethod<number>(
+            pipe(
+                tap(() => {patchState(store, {loading: true})}),
+                switchMap((userId) => {
+                    const conversationId = store.currentConversationId();
+                    if (conversationId === null){
+                        patchState(store, { loading: false, error: 'Conversation not chosen' });
+                        return EMPTY;
+                    }
+                    return conversationService.removeUser(userId, conversationId).pipe(
+                        tapResponse({
+                            next: () => { patchState(store, (state) => ({
+                                participants: state.participants.filter(p => p.userId !== userId),
+                                loading: false,
+                                error: null
+                            })) },
+                            error: (err: any) => { patchState(store, {loading: false, error: err.error?.message}) }
+                        })
+                    )
+                })
             )
         ),
         addMessage(newMessage: any) {

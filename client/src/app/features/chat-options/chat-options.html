@@ -1,0 +1,48 @@
+<div class="chat-options-wrapper d-flex flex-column vh-100 border-start shadow-sm">
+    <header class="chat-header p-3 border-bottom d-flex align-items-center justify-content-between">
+        <h5 class="chat-header-title m-0 fw-bold">
+            Chat Options
+        </h5>
+        <div class="d-flex gap-2">
+            <button mat-fab title="Members"><mat-icon>groups</mat-icon></button>
+            <button mat-fab title="Files"><mat-icon>file_open</mat-icon></button>
+        </div>
+    </header>
+
+    <div class="p-3 border-bottom">
+        <h6 class="fw-bold mb-3 small text-uppercase opacity-75">Add Member</h6>
+        <app-chip [(selectedUsers)]="selectedUsers"></app-chip>
+    </div>
+
+    <div class="flex-grow-1 overflow-auto p-3">
+        <h6 class="fw-bold mb-3 small text-uppercase opacity-75">
+            Members ({{ chatStore.participants().length }})
+        </h6>
+
+        <ul class="list-group list-group-flush border rounded">
+            @for (p of chatStore.participants(); track p.userId) {
+            <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent py-3">
+                <div class="d-flex align-items-center">
+                    <mat-icon class="me-3 opacity-50">account_circle</mat-icon>
+                    <span class="fw-medium">{{ p.username }}</span>
+                </div>
+
+                <div class="d-flex gap-1">
+                    @if(p.userId !== authStore.currentUser()?.id){
+                    <button mat-icon-button color="primary" (click)="openPrivateChat(p)" title="Send DM">
+                        <mat-icon>message</mat-icon>
+                    </button>
+                    }
+
+                    @if (chatStore.participants().length !== 2 && chatStore.isAdmin() && p.userId !==
+                    authStore.currentUser()?.id) {
+                    <button mat-icon-button color="warn" (click)="removeUser(p.userId)" title="Remove member">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                    }
+                </div>
+            </li>
+            }
+        </ul>
+    </div>
+</div>

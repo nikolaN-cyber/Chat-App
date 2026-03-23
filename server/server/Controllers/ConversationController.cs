@@ -68,5 +68,35 @@ namespace server.Controllers
             }
             return Ok(response.Data);
         }
+
+        [Authorize]
+        [HttpDelete("remove/{conversationId}/{userId}")]
+        public async Task<IActionResult> RemoveUser([FromRoute] int conversationId, [FromRoute] int userId, CancellationToken cancellationToken)
+        {
+            var request = new RemoveUserRequest(
+                userId,
+                conversationId
+             );
+            var response = await _conversationService.RemoveUserAsync(request, cancellationToken);
+            if (!response.Success)
+            {
+                if (response.Message == "Unauthorized") return Unauthorized(response);
+                else return BadRequest(response);
+            }
+            return Ok(response.Data);
+        }
+
+        [Authorize]
+        [HttpPost("add-users")]
+        public async Task<IActionResult> AddUser([FromBody] AddUsersRequest request, CancellationToken cancellationToken)
+        {
+            var response = await _conversationService.AddUserAsync(request, cancellationToken);
+            if (!response.Success)
+            {
+                if (response.Message == "Unauthorized") return Unauthorized(response);
+                else return BadRequest(response);
+            }
+            return Ok(response.Data);
+        }
     }
 }

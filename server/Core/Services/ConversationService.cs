@@ -36,7 +36,9 @@ namespace Core.Services
                                 m.Author != null ? (m.Author.Username ?? "Unknown") : "Unknown",
                                 m.Content,
                                 m.CreatedAt
-                            )).ToList()
+                            )).ToList(),
+                        c.Participants.Select( p => new ParticipantNames(p.User.Username, p.UserId)).ToList(),
+                        c.AdminId
                     ))
                     .FirstOrDefaultAsync(cancellationToken);
 
@@ -188,6 +190,71 @@ namespace Core.Services
             _context._conversation.Remove(conversation);
             await _context.SaveChangesAsync(cancellationToken);
             return ApiResponse<bool>.SuccessResponse(true);
+        }
+
+        public async Task<ApiResponse<bool>> RemoveUserAsync(RemoveUserRequest request, CancellationToken cancellationToken)
+        {
+            int currentUserId = _currentUserService.GetCurrentUserId();
+            if (currentUserId == 0)
+            {
+                return ApiResponse<bool>.FailureResponse("Unauthorized");
+            }
+            var conversation = await _context._conversation.FirstOrDefaultAsync(c => c.Id == request.ConversationId, cancellationToken);
+            if (conversation == null)
+            {
+                return ApiResponse<bool>.FailureResponse("Conversation with this id does not exist");
+            }
+            if (conversation.AdminId != currentUserId)
+            {
+                return ApiResponse<bool>.FailureResponse("Unauthorized action");
+            }
+            var participant = await _context._participations.FirstOrDefaultAsync(p => p.ConversationId == request.ConversationId && p.UserId == request.UserId, cancellationToken);
+            if (participant == null)
+            {
+                return ApiResponse<bool>.FailureResponse("User is not participating in this conversation");
+            }
+            _context._participations.Remove(participant);
+            await _context.SaveChangesAsync(cancellationToken);
+            return ApiResponse<bool>.SuccessResponse(true);
+        }
+
+        public async Task<ApiResponse<List<ParticipantNames>>> AddUserAsync(AddUsersRequest request, CancellationToken cancellationToken)
+        {
+            int currentUserId = _currentUserService.GetCurrentUserId();
+
+            var validation = await _context._conversation
+                .Where(c => c.Id == request.ConversationId)
+                .Select(c => new {
+                    IsAdmin = c.AdminId == currentUserId,
+                    ExistingIds = c.Participants.Select(p => p.UserId).ToList()
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (validation == null) return ApiResponse<List<ParticipantNames>>.FailureResponse("Conversation not found");
+            if (!validation.IsAdmin) return ApiResponse<List<ParticipantNames>>.FailureResponse("Only admin can manage members");
+
+            var newIdsToAdd = request.UserIds.Except(validation.ExistingIds).ToList();
+
+            if (!newIdsToAdd.Any())
+                return ApiResponse<List<ParticipantNames>>.FailureResponse("All selected users are already members");
+
+            var participantsData = await _context._users
+                .Where(u => newIdsToAdd.Contains(u.Id))
+                .Select(u => new ParticipantNames(u.Username, u.Id))
+                .ToListAsync(cancellationToken);
+
+
+            var participations = participantsData.Select(p => new Participation
+            {
+                ConversationId = request.ConversationId,
+                UserId = p.userId,
+                JoinedAt = DateTime.UtcNow
+            });
+
+            _context._participations.AddRange(participations);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return ApiResponse<List<ParticipantNames>>.SuccessResponse(participantsData);
         }
     }
 }
