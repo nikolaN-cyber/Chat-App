@@ -8,11 +8,13 @@ import { Chat } from './features/chat/chat';
 import { MyProfile } from './features/my-profile/my-profile';
 import { CreateConversation } from './features/create-conversation/create-conversation';
 import { ChatOptions } from './features/chat-options/chat-options';
+import { Welcome } from './features/welcome/welcome';
 
 export const routes: Routes = [
     { path: "", component: Login, canActivate: [GuestGuard] },
     {
         path: "home", component: Home, children: [
+            {path: '', component: Welcome},
             { path: 'chat/:id', component: Chat },
             { path: 'chat/:id/options', component: ChatOptions},
             { path: 'my-profile', component: MyProfile },

@@ -3,7 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { authStore } from '../../store/auth.store';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-navigation-sidebar',
@@ -11,6 +11,7 @@ import { Router } from '@angular/router';
     MatButtonModule,
     MatIconModule,
     MatListModule,
+    RouterModule
   ],
   templateUrl: './navigation-sidebar.html',
   styleUrl: './navigation-sidebar.css',

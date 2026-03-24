@@ -1,4 +1,5 @@
 ﻿using Core.DTOs;
+using Core.Helpers;
 using Core.Interfaces;
 using Core.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -11,9 +12,11 @@ namespace server.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        public AuthController(IAuthService service)
+        private readonly IEmailQueue _emailQueue;
+        public AuthController(IAuthService service, IEmailQueue emailQueue)
         {
             _authService = service;
+            _emailQueue = emailQueue;
         }
 
         [AllowAnonymous]
@@ -21,9 +24,24 @@ namespace server.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterData request, CancellationToken cancellationToken)
         {
             var result = await _authService.RegisterAsync(request, cancellationToken);
+
             if (!result.Success)
             {
                 return BadRequest(result);
+            }
+            try
+            {
+                var emailBody = EmailTemplate.GetWelcomeTemplate(request.Username);
+                var welcomeEmail = new EmailMessage(
+                    To: request.Email,
+                    Subject: "Welcome!",
+                    Body: emailBody
+                );
+                _emailQueue.QueueEmail(welcomeEmail);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Greška pri dodavanju mejla u red: {ex.Message}");
             }
             return Ok(result);
         }

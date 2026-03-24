@@ -4,6 +4,7 @@ using Domain;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Core.DTOs;
+using Core.Helpers;
 
 namespace Core.Services
 {
@@ -11,10 +12,12 @@ namespace Core.Services
     {
         private readonly AppDbContext _context;
         private readonly ICurrentUserService _currentUserService;
-        public UserService(AppDbContext context, ICurrentUserService currentUserService)
+        private readonly IEmailQueue _emailQueue;
+        public UserService(AppDbContext context, ICurrentUserService currentUserService, IEmailQueue emailQueue)
         { 
             _context = context;
             _currentUserService = currentUserService;
+            _emailQueue = emailQueue;
         }
 
         public async Task<ApiResponse<UserResponse>> EditAsync(EditUserData request, CancellationToken cancellationToken)
@@ -66,6 +69,7 @@ namespace Core.Services
 
             var conversation = await _context._conversation
                 .Include(c => c.Participants)
+                .ThenInclude(p => p.User)
                 .FirstOrDefaultAsync(c => c.Id == request.ConversationId, cancellationToken);
 
             if (conversation == null) return ApiResponse<MessageResponse>.FailureResponse("Conversation does not exist");
@@ -73,7 +77,7 @@ namespace Core.Services
             if (!conversation.Participants.Any(p => p.UserId == currentUserId))
                 return ApiResponse<MessageResponse>.FailureResponse("Niste učesnik ove konverzacije");
 
-            var user = await _context._users.FirstAsync(u => u.Id == currentUserId);
+            var sender = await _context._users.FirstAsync(u => u.Id == currentUserId, cancellationToken);
 
             var message = new Message
             {
@@ -86,8 +90,33 @@ namespace Core.Services
             _context._messages.Add(message);
             await _context.SaveChangesAsync(cancellationToken);
 
+            var recipients = conversation.Participants.Where(p => p.UserId != currentUserId).Select(p => p.User);
+
+            if (recipients == null)
+            {
+                return ApiResponse<MessageResponse>.FailureResponse("Users to send, do not exist");
+            }
+
+            foreach (var recipient in recipients)
+            {
+                if (recipient != null && recipient.LastActive < DateTime.UtcNow.AddMinutes(-10))
+                {
+                    var emailBody = EmailTemplate.GetNewMessageTemplate(
+                            recipient.Username,
+                            sender.Username,
+                            message.Content
+                        );
+
+                    _emailQueue.QueueEmail(new EmailMessage(
+                            To: recipient.Email,
+                            Subject: $"New message from {sender.Username}",
+                            Body: emailBody
+                        ));
+                }
+            }
+
             var response = new MessageResponse(
-                user.Username,
+                sender.Username,
                 message.Content,
                 message.CreatedAt
             );
