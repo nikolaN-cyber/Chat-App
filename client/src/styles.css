@@ -19,6 +19,14 @@ body.dark-theme {
 html, body {
   height: 100%;
   background-color: var(--bg-color) !important;
+  margin: 0;
+  padding: 0;
   color: var(--text-color);
   transition: background-color 0.3s ease, color 0.3s ease;
+  overflow: hidden;
+}
+
+app-root {
+  display: block;
+  height: 100%;
 }

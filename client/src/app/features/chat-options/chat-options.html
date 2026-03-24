@@ -6,11 +6,12 @@
         <button mat-fab title="Files"><mat-icon>file_open</mat-icon></button>
     </header>
 
-    <div class="p-3 border-bottom">
+    @if(isGroup()){
+        <div class="p-3 border-bottom">
         <h6 class="fw-bold mb-3 small text-uppercase opacity-75">Add Member</h6>
         <app-chip [(selectedUsers)]="selectedUsers"></app-chip>
     </div>
-
+    }
     <div class="flex-grow-1 overflow-auto p-3">
         <h6 class="fw-bold mb-3 small text-uppercase opacity-75">
             Members ({{ chatStore.participants().length }})

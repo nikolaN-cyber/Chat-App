@@ -31,6 +31,11 @@ export class ChatOptions {
   );
 
   selectedUsers = signal<UserSearchResponse[]>([]);
+  readonly isGroup = computed(() => {
+    const conversations = this.conversationStore.conversations;
+    const currentId = this.routeId();
+    return !!conversations()?.find(c => c.id === currentId)?.isGroup;
+  })
 
   constructor() {
     const currentId = this.routeId();
@@ -59,7 +64,7 @@ export class ChatOptions {
   }
 
   removeUser(userId: number) {
-    if (userId && confirm("Are you sure you want to remove this user?")){
+    if (userId && confirm("Are you sure you want to remove this user?")) {
       this.chatStore.removeUser(userId);
     }
   }
