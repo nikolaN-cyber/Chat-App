@@ -1,4 +1,4 @@
-﻿using Core.DTOs;
+﻿using Core.DTOs.Conversation;
 using Core.Types;
 
 namespace Core.Interfaces

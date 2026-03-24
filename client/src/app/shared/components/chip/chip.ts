@@ -13,7 +13,6 @@ import { UserSearchResponse } from '../../../core/models/user';
   selector: 'app-chip',
   imports: [MatFormField, MatAutocompleteModule, MatProgressSpinner, MatChipsModule, MatLabel, MatIcon, MatInputModule],
   templateUrl: './chip.html',
-  styleUrl: './chip.css',
   standalone: true
 })
 export class Chip {

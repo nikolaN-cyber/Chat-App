@@ -1,7 +1,10 @@
-<div class="create-chat-wrapper d-flex flex-column vh-100 border-start">
+<div class="create-chat-wrapper d-flex flex-column vh-100 border-start" 
+     style="display: block; height: 100vh; background-color: var(--bg-color); color: var(--text-color);">
+    
     <header class="p-4 border-bottom bg-transparent">
         <div class="d-flex align-items-center gap-3">
-            <div class="icon-circle shadow-sm">
+            <div class="shadow-sm d-flex align-items-center justify-content-center" 
+                 style="width: 45px; height: 45px; background: rgba(13, 110, 253, 0.1); border-radius: 50%;">
                 <mat-icon color="primary">add_comment</mat-icon>
             </div>
             <div>
@@ -14,8 +17,10 @@
     <div class="select-participants-container container-fluid py-4 flex-grow-1 overflow-auto">
         <div class="row g-4">
             <div class="col-md-7">
-                <div class="select-card card border-0 shadow-sm p-4 bg-card-custom">
+                <div class="card border-0 shadow-sm p-4" 
+                     style="background-color: var(--card-bg, #ffffff); border-radius: 15px;">
                     <h6 class="fw-bold mb-3 small text-uppercase opacity-75">Select Participants</h6>
+                    
                     <app-chip [(selectedUsers)]="selectedUsers"></app-chip>
 
                     @if (selectedUsers().length > 0) {
@@ -24,7 +29,7 @@
                         <mat-form-field class="w-100" appearance="outline">
                             <mat-label>Group title (optional)</mat-label>
                             <mat-icon matPrefix class="me-2 opacity-50">label</mat-icon>
-                            <input class="title-input" matInput placeholder="e.g. Project X Team"
+                            <input style="font-weight: 500;" matInput placeholder="e.g. Project X Team"
                                 (input)="groupTitle.set($any($event.target).value)" [value]="groupTitle()" />
                         </mat-form-field>
 
@@ -32,15 +37,15 @@
                             class="w-100 py-4 mt-2 d-flex align-items-center justify-content-center"
                             (click)="createChat()" [disabled]="conversationStore.loading()">
                             @if (conversationStore.loading()) {
-                            <mat-spinner diameter="20" class="me-2"></mat-spinner> Creating...
+                                <mat-spinner diameter="20" class="me-2"></mat-spinner> Creating...
                             } @else {
-                            <mat-icon class="me-2">forum</mat-icon> Create Chat
+                                <mat-icon class="me-2">forum</mat-icon> Create Chat
                             }
                         </button>
                     </div>
                     } @else {
                     <div class="empty-state text-center py-5 opacity-50">
-                        <mat-icon style="font-size: 48px; width: 48px; height: 48px;">group_add</mat-icon>
+                        <mat-icon style="font-size: 48px; width: 48px; height: 48px; color: var(--mat-sys-primary);">group_add</mat-icon>
                         <p class="mt-2">Search for users to start a conversation</p>
                     </div>
                     }
@@ -49,18 +54,18 @@
 
             <div class="col-md-5">
                 <div class="info-sidebar d-flex flex-column gap-3">
-                    <div class="tips-class card border-0 shadow-sm p-3 bg-card-custom">
+                    <div class="card border-0 shadow-sm p-3" style="background-color: var(--card-bg, #ffffff); border-radius: 15px;">
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <mat-icon class="text-warning">lightbulb</mat-icon>
                             <span class="fw-bold">Quick Tips</span>
                         </div>
                         <ul class="small text-muted ps-3">
-                            <li>Add one user for a <strong>Direct Message</strong>.</li>
-                            <li>Add two or more for a <strong>Group Chat</strong>.</li>
+                            <li style="margin-bottom: 8px;">Add one user for a <strong>Direct Message</strong>.</li>
+                            <li style="margin-bottom: 8px;">Add two or more for a <strong>Group Chat</strong>.</li>
                         </ul>
                     </div>
 
-                    <div class="card border-0 shadow-sm p-3 bg-card-custom opacity-75">
+                    <div class="card border-0 shadow-sm p-3 opacity-75" style="background-color: var(--card-bg, #ffffff); border-radius: 15px;">
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <mat-icon class="text-info">security</mat-icon>
                             <span class="fw-bold">Privacy</span>

@@ -1,8 +1,9 @@
-﻿using Core.DTOs;
+﻿using Core.DTOs.Conversation;
+using Core.DTOs.Message;
 using Core.Interfaces;
 using Core.Types;
-using Domain;
-using Infrastructure;
+using Domain.Entities;
+using Infrastructure.Contexts;
 using Microsoft.EntityFrameworkCore;
 
 namespace Core.Services
@@ -84,7 +85,8 @@ namespace Core.Services
                                       .Select(p => p.User.FirstName + " " + p.User.LastName).FirstOrDefault() ?? "Private Chat",
                         c.IsGroup,
                         allParticipantIds,
-                        c.Participants.Select(p => p.User.Username).ToList()
+                        c.Participants.Select(p => p.User.Username).ToList(),
+                        c.Participants.Where(p => p.UserId != currentUserId).Select(p => p.User.PhotoUrl).FirstOrDefault()
                     ))
                     .FirstOrDefaultAsync(cancellationToken);
                 if (existingChat != null)
@@ -117,7 +119,7 @@ namespace Core.Services
 
             var participantData = await _context._users
                 .Where(u => allParticipantIds.Contains(u.Id))
-                .Select(u => new { u.Id, u.Username, u.FirstName, u.LastName })
+                .Select(u => new { u.Id, u.Username, u.FirstName, u.LastName, u.PhotoUrl })
                 .ToListAsync(cancellationToken);
 
             var otherUser = participantData.FirstOrDefault(u => u.Id != currentUserId);
@@ -127,7 +129,8 @@ namespace Core.Services
                 Title: isGroup ? newConversation.Title : otherUser != null ? $"{otherUser.FirstName} {otherUser.LastName}".Trim() : "Private Chat",
                 IsGroup: newConversation.IsGroup,
                 ParticipantIds: allParticipantIds,
-                ParticipantNames: participantData.Select(u => u.Username).ToList()
+                ParticipantNames: participantData.Select(u => u.Username).ToList(),
+                PhotoUrl: !isGroup && otherUser != null ? otherUser.PhotoUrl : null
             );
 
             return ApiResponse<ConversationResponse>.SuccessResponse(response, isGroup ? "Grupa kreirana" : "Privatni čet kreiran");
@@ -158,7 +161,13 @@ namespace Core.Services
                         c.Participants.Select(p => p.UserId).ToList(),
                         c.Participants.Select(p => p.User != null
                             ? (p.User.FirstName ?? "User")
-                            : "Unknown").ToList()
+                            : "Unknown").ToList(),
+                        !c.IsGroup
+                            ? c.Participants
+                                .Where(p => p.UserId != currentUserId)
+                                .Select(p => p.User.PhotoUrl)
+                                .FirstOrDefault()
+                            : null
                     ));
 
                 var conversations = await query.ToListAsync(cancellationToken);

@@ -3,7 +3,7 @@ import { inject, Injectable } from "@angular/core";
 import { environment } from "../../../environments/environment.development";
 import { Message } from "../models/message";
 import { MessageResponse } from "../models/conversation";
-import { UserSearchResponse } from "../models/user";
+import { PhotoUpdateResponse, UserSearchResponse } from "../models/user";
 
 @Injectable({
     providedIn: 'root'
@@ -19,5 +19,12 @@ export class UserService {
     searchUsersByUsername(filter: string){
         const params = new HttpParams().set('filter', filter);
         return this.http.get<UserSearchResponse[]>(`${this.apiUrl}/search-by-username`, {params});
+    }
+
+    addProfilePhoto(file: File){
+        const formData = new FormData();
+        formData.append('file', file);
+
+        return this.http.post<PhotoUpdateResponse>(`${this.apiUrl}/add-photo`, formData);
     }
 }

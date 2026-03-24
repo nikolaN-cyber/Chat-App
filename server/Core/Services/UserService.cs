@@ -1,10 +1,11 @@
 ﻿using Core.Interfaces;
 using Core.Types;
-using Domain;
-using Infrastructure;
+using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using Core.DTOs;
+using Core.DTOs.User;
+using Core.DTOs.Message;
 using Core.Helpers;
+using Infrastructure.Contexts;
 
 namespace Core.Services
 {

@@ -1,7 +1,7 @@
-﻿using Core.DTOs;
+﻿using Core.DTOs.Auth;
+using Core.DTOs.Message;
 using Core.Helpers;
 using Core.Interfaces;
-using Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

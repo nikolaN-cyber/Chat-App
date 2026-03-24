@@ -1,14 +1,14 @@
 ﻿using Core.Interfaces;
 using Core.Types;
-using Domain;
-using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Core.DTOs;
+using Core.DTOs.Auth;
+using Domain.Entities;
+using Infrastructure.Contexts;
 
 namespace Core.Services
 {
@@ -64,6 +64,7 @@ namespace Core.Services
                 user.LastName,
                 user.Age,
                 user.Email,
+                user.PhotoUrl,
                 token
              ), "User successfully loged in");
         }

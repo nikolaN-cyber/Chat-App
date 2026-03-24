@@ -6,6 +6,7 @@ import { MatListModule } from '@angular/material/list';
 import { themeStore } from '../../store/theme.store';
 import { authStore } from '../../store/auth.store';
 import { RouterLink, RouterLinkActive } from "@angular/router";
+import { environment } from '../../../../environments/environment.development';
 
 @Component({
   selector: 'app-sidebar',
@@ -28,6 +29,8 @@ export class Sidebar {
   readonly privateChats = computed(() => 
   (this.conversationsStore.conversations() ?? []).filter(c => !c.isGroup)
 );
+
+  public imageBaseUrl = environment.imageBaseUrl;
 
 readonly groupChats = computed(() => 
   (this.conversationsStore.conversations() ?? []).filter(c => c.isGroup)

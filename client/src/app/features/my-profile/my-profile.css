@@ -3,7 +3,63 @@
 }
 
 .profile-card {
-    background-color: var(--sidebar-color);
-    color: white;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 20px;
+  overflow: hidden;
+  background-color: var(--mat-sys-surface);
 }
 
+.profile-header {
+  background: var(--sidebar-color);
+  color: white;
+}
+
+.avatar-wrapper {
+  position: relative;
+  
+  .profile-avatar, .profile-avatar-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    object-fit: cover;
+  }
+
+  .profile-avatar-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    mat-icon {
+      font-size: 60px;
+      width: 60px;
+      height: 60px;
+      color: white;
+    }
+  }
+}
+
+.detail-icon-bg {
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  mat-icon {
+    font-size: 22px;
+  }
+}
+
+.detail-item {
+  transition: transform 0.2s ease;
+  &:hover {
+    transform: translateX(5px);
+  }
+}
+
+.detail-item small, span, mat-icon {
+    color: black;
+}

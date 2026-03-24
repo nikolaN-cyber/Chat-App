@@ -1,5 +1,6 @@
 ﻿using Core.Types;
-using Core.DTOs;
+using Core.DTOs.Message;
+using Core.DTOs.User;
 
 namespace Core.Interfaces
 {

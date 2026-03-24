@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Core.DTOs;
+namespace Core.DTOs.Message;
 
 public record MessageData(
     [Required(ErrorMessage = "Message cannot be empty")]
@@ -8,12 +8,6 @@ public record MessageData(
     string Content,
     [Range(1, int.MaxValue, ErrorMessage = "ConversationId must be a valid integer")]
     int ConversationId
-);
-
-public record MessageResponse(
-    string AuthorUsername,
-    string Content,
-    DateTime CreatedAt
 );
 
 public record EmailMessage(string To, string Subject, string Body);

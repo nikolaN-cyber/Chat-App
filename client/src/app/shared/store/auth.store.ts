@@ -41,22 +41,30 @@ export const authStore = signalStore(
         ),
         register: rxMethod<UserRegister>(
             pipe(
-                tap(() => patchState(store, {loading: true})),
-                switchMap((registerData) => 
+                tap(() => patchState(store, { loading: true })),
+                switchMap((registerData) =>
                     authService.register(registerData).pipe(
                         tapResponse({
-                            next: () => { patchState(store, {loading: false, error: null}); router.navigate(["/"]); },
-                            error: (err: any) => {patchState(store, {error: err.error?.message}); }
+                            next: () => { patchState(store, { loading: false, error: null }); router.navigate(["/"]); },
+                            error: (err: any) => { patchState(store, { error: err.error?.message }); }
                         })
                     )
                 )
             )
         ),
         logout() {
-            patchState(store, {currentUser: null});
+            patchState(store, { currentUser: null });
             theme.setLightTheme();
             document.body.classList.remove('dark-theme');
             router.navigate(["/"]);
+        },
+        updatePhotoUrl(newUrl: string) {
+            const current = store.currentUser();
+            if (current) {
+                const updated = { ...current, photoUrl: newUrl };
+                patchState(store, { currentUser: updated });
+                localStorage.setItem('user', JSON.stringify(updated));
+            }
         }
     }))
 )

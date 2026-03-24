@@ -1,12 +1,59 @@
-<div class="my-profile-container h-100 pb-5 d-flex justify-content-center align-items-center">
-      <mat-card class="profile-card text-center p-4 shadow-sm border-0">
-        <h3 class="fw-bold mb-0">{{ user()?.username }}</h3>
-        <hr>
-        <div class="text-start mt-3">
-          <div class="d-flex align-items-center mb-2">
-            <mat-icon class="me-2">email</mat-icon>
-            <span>{{ user()?.email }}</span>
+<div class="my-profile-container h-100 d-flex justify-content-center align-items-center">
+  <mat-card class="profile-card shadow-lg border-0">
+    <div class="profile-header d-flex flex-column align-items-center p-4">
+      <div class="avatar-wrapper mb-3">
+        @if (user()?.photoUrl) {
+          <img [src]="imageBaseUrl + user()?.photoUrl" class="profile-avatar shadow">
+        } @else {
+          <div class="profile-avatar-placeholder shadow">
+            <mat-icon>person</mat-icon>
+          </div>
+        }
+      </div>
+      <h2 class="fw-bold mb-0 text-white">{{ user()?.firstName }} {{ user()?.lastName }}</h2>
+      <span class="text-white-50">{{ '@' + user()?.username }}</span>
+    </div>
+
+    <mat-card-content class="p-4">
+      <div class="profile-details">
+        
+        <div class="detail-item d-flex align-items-center mb-3">
+          <div class="detail-icon-bg me-3">
+            <mat-icon>email</mat-icon>
+          </div>
+          <div class="d-flex flex-column">
+            <small class="text-uppercase fw-bold">Email Address</small>
+            <span class="fw-medium">{{ user()?.email }}</span>
           </div>
         </div>
-      </mat-card>
+
+        <div class="detail-item d-flex align-items-center mb-3">
+          <div class="detail-icon-bg me-3">
+            <mat-icon color="primary">cake</mat-icon>
+          </div>
+          <div class="d-flex flex-column">
+            <small class="text-muted text-uppercase fw-bold">Age</small>
+            <span class="fw-medium">{{ user()?.age || 'Not specified' }} years old</span>
+          </div>
+        </div>
+
+        <div class="detail-item d-flex align-items-center">
+          <div class="detail-icon-bg me-3">
+            <mat-icon color="primary">badge</mat-icon>
+          </div>
+          <div class="d-flex flex-column">
+            <small class="text-muted text-uppercase fw-bold">Full Name</small>
+            <span class="fw-medium">{{ user()?.firstName }} {{ user()?.lastName }}</span>
+          </div>
+        </div>
+
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions class="p-3 border-top d-flex justify-content-end">
+      <button mat-button color="primary">
+        <mat-icon class="me-1">edit</mat-icon> EDIT PROFILE
+      </button>
+    </mat-card-actions>
+  </mat-card>
 </div>

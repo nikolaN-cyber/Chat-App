@@ -8,37 +8,43 @@
 
   <div class="flex-grow-1 overflow-auto">
     <mat-nav-list>
-      
+
       @if (privateChats().length) {
-        <div mat-subheader class="section-header">Direct Messages</div>
-        @for (conv of privateChats(); track conv.id) {
-          <a class="conversation-container" [routerLink]="['/home/chat', conv.id]" [state]="{ data: conv }" routerLinkActive="active-chat" mat-list-item>
-            <mat-icon matListItemIcon>person</mat-icon>
-            <div matListItemTitle class="conv-title fw-bold">
-              {{ conv.title || 'Private chat' }}
-            </div>
-          </a>
+      <div mat-subheader class="section-header">Direct Messages</div>
+      @for (conv of privateChats(); track conv.id) {
+      <a class="conversation-container" [routerLink]="['/home/chat', conv.id]" [state]="{ data: conv }"
+        routerLinkActive="active-chat" mat-list-item>
+        @if (conv.photoUrl) {
+        <img matListItemAvatar [src]="imageBaseUrl + conv.photoUrl" alt="User avatar" class="avatar-border">
+        } @else {
+        <mat-icon matListItemIcon class="text-secondary">account_circle</mat-icon>
         }
+        <div matListItemTitle class="conv-title fw-bold">
+          {{ conv.title || 'Private chat' }}
+        </div>
+      </a>
+      }
       }
 
       @if (groupChats().length) {
-        <div mat-subheader class="section-header">Groups</div>
-        @for (conv of groupChats(); track conv.id) {
-          <a class="conversation-container" [routerLink]="['/home/chat', conv.id]" [state]="{ data: conv }" routerLinkActive="active-chat" mat-list-item>
-            <mat-icon matListItemIcon>groups</mat-icon>
-            <div matListItemTitle class="conv-title fw-bold">
-              {{ conv.title }}
-            </div>
-          </a>
-        }
+      <div mat-subheader class="section-header">Groups</div>
+      @for (conv of groupChats(); track conv.id) {
+      <a class="conversation-container" [routerLink]="['/home/chat', conv.id]" [state]="{ data: conv }"
+        routerLinkActive="active-chat" mat-list-item>
+        <mat-icon matListItemIcon>groups</mat-icon>
+        <div matListItemTitle class="conv-title fw-bold">
+          {{ conv.title }}
+        </div>
+      </a>
+      }
       }
 
       @if (!conversationsStore.conversations()?.length && !conversationsStore.loading()) {
-        <div class="p-3 text-center text-muted">
-          <small>Inbox is empty.</small>
-        </div>
+      <div class="p-3 text-center text-muted">
+        <small>Inbox is empty.</small>
+      </div>
       }
-      
+
     </mat-nav-list>
   </div>
 

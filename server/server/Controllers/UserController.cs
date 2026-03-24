@@ -1,7 +1,8 @@
-﻿using Azure.Core;
-using Core.DTOs;
+﻿using Core.DTOs.User;
+using Core.DTOs.Message;
 using Core.Hubs;
 using Core.Interfaces;
+using Infrastructure.Contexts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -15,10 +16,14 @@ namespace server.Controllers
     {
         private readonly IUserService _userService;
         private readonly IHubContext<ChatHub> _hubContext;
-        public UserController(IUserService userService, IHubContext<ChatHub> hubContext)
+        private readonly AppDbContext _context;
+        private readonly IPhotoService _photoService;
+        public UserController(IUserService userService, IHubContext<ChatHub> hubContext, AppDbContext context, IPhotoService photoService)
         {
             _userService = userService;
             _hubContext = hubContext;
+            _context = context;
+            _photoService = photoService;
         }
 
         [HttpPatch("edit")]
@@ -69,6 +74,20 @@ namespace server.Controllers
                 return BadRequest(result);
             }
             return Ok(result.Data);
+        }
+
+        [HttpPost("add-photo")]
+        public async Task<IActionResult> AddPhoto(IFormFile file, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var photoUrl = await _photoService.UpdateUserPhotoAsync(file, cancellationToken);
+                return Ok(new { url = photoUrl });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

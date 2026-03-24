@@ -20,10 +20,15 @@ export interface LoginResponse{
     lastName: string;
     age: number;
     email: string;
+    photoUrl: string;
     accessToken: string;
 }
 
 export interface UserSearchResponse{
     id: number;
     username: string;
+}
+
+export interface PhotoUpdateResponse {
+    photoUrl: string;
 }

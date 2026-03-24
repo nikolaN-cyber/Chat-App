@@ -55,3 +55,15 @@
 body.dark-theme .sidebar {
   border-right: 1px solid var(--border-color);
 }
+
+.avatar-border {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.1);
+  object-fit: cover;
+}
+
+[mat-list-item] img[matListItemAvatar] {
+    margin-right: 16px;
+}

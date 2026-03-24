@@ -3,7 +3,7 @@ using Core.Hubs;
 using Core.Interfaces;
 using Core.Services;
 using Core.Workers;
-using Infrastructure;
+using Infrastructure.Contexts;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -38,6 +38,7 @@ builder.Services.AddScoped<IConversationService, ConversationService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IPhotoService, PhotoService>();
 
 //Email infrastructure
 builder.Services.AddSingleton<IEmailQueue, EmailQueue>();
@@ -88,6 +89,9 @@ builder.Services.AddAuthentication(options =>
 
 //App building and middleware pipelines
 var app = builder.Build();
+
+app.UseStaticFiles();
+
 app.UseRouting();
 
 app.UseCors("AllowAngularClient");

@@ -14,8 +14,7 @@ import { MatIconModule } from '@angular/material/icon';
 @Component({
   selector: 'app-create-conversation',
   imports: [MatFormField, MatAutocompleteModule, MatProgressSpinner, MatChipsModule, MatLabel, MatInputModule, Chip, MatIconModule],
-  templateUrl: './create-conversation.html',
-  styleUrl: './create-conversation.css',
+  templateUrl: './create-conversation.html'
 })
 export class CreateConversation {
 

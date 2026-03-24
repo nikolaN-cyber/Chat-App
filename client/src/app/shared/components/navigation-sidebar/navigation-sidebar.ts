@@ -13,8 +13,23 @@ import { Router, RouterModule } from '@angular/router';
     MatListModule,
     RouterModule
   ],
-  templateUrl: './navigation-sidebar.html',
-  styleUrl: './navigation-sidebar.css',
+  template: `
+  <div class="sidebar d-flex flex-column vh-100 border-end">
+    <div class="p-3 d-flex flex-column justify-content-between align-items-center">
+      <button [style.color]="'var(--text-color)'" [routerLink]="['/home']" title="Home" mat-icon-button>
+        <mat-icon>home</mat-icon>
+      </button>
+    </div>
+
+    <div class="p-3 mt-auto">
+      <div class="d-flex flex-column align-items-center gap-2">
+        <button [style.color]="'var(--text-color)'" (click)="goToProfilePage()" title="{{title}}" mat-icon-button>
+        <mat-icon>person</mat-icon>
+        </button>
+        <span></span>
+      </div>
+    </div>
+  </div>`
 })
 export class NavigationSidebar {
   readonly authStore = inject(authStore);
@@ -22,7 +37,7 @@ export class NavigationSidebar {
 
   title = this.authStore.currentUser()?.firstName + " " + this.authStore.currentUser()?.lastName;
 
-  goToProfilePage(){
+  goToProfilePage() {
     this.router.navigate(['/home/my-profile']);
   }
 }

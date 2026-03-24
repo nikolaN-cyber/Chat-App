@@ -1,6 +1,4 @@
-﻿using Core.DTOs;
-
-namespace Core.Interfaces
+﻿namespace Core.Interfaces
 {
     public interface ICurrentUserService
     {

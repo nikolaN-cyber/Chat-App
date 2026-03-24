@@ -1,5 +1,5 @@
 ﻿using Core.Interfaces;
-using Infrastructure;
+using Infrastructure.Contexts;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

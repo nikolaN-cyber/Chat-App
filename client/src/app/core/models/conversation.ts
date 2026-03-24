@@ -4,6 +4,7 @@ export interface ConversationResponse {
     isGroup: boolean,
     participantIds: number[];
     participantNames: string[];
+    photoUrl: string | null;
 }
 
 export interface ConversationDetails {

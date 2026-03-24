@@ -36,9 +36,13 @@ export const conversationsStore = signalStore(
                         tapResponse({
                             next: (data) => {
                                 patchState(store, (state) => {
-                                    const exists = state.conversations?.some(c => c.id === data.id);
-                                    if (exists) {
-                                        return { loading: false };
+                                    const conversations = state.conversations || [];
+                                    const index = conversations.findIndex(c => c.id === data.id);
+
+                                    if (index !== -1) {
+                                        const updatedConversations = [...conversations];
+                                        updatedConversations[index] = data;
+                                        return { conversations: updatedConversations, loading: false };
                                     }
                                     return {
                                         conversations: state.conversations

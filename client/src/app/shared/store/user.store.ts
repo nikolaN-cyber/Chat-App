@@ -1,10 +1,11 @@
-import { patchState, signalState, signalStore, withComputed, withMethods, withState } from "@ngrx/signals";
+import { patchState, signalStore, withMethods, withState } from "@ngrx/signals";
 import { UserSearchResponse } from "../../core/models/user";
 import { inject } from "@angular/core";
 import { UserService } from "../../core/services/user.service";
 import { rxMethod } from "@ngrx/signals/rxjs-interop";
 import { debounceTime, distinctUntilChanged, filter, pipe, switchMap, tap } from "rxjs";
 import { tapResponse } from "@ngrx/operators";
+import { authStore } from "./auth.store";
 
 export const userStore = signalStore(
     { providedIn: 'root' },
@@ -14,7 +15,7 @@ export const userStore = signalStore(
         error: null as string | null,
         searchFilter: ''
     }),
-    withMethods((store, userService = inject(UserService)) => ({
+    withMethods((store, userService = inject(UserService), auth = inject(authStore)) => ({
         updateFilter(filter: string) {
             patchState(store, { searchFilter: filter });
         },
@@ -33,7 +34,27 @@ export const userStore = signalStore(
                     )
                 )
             )
+        ),
+        updatePhoto: rxMethod<File>(
+            pipe(
+                tap(() => patchState(store, { loading: true })),
+                switchMap((file) => 
+                    userService.addProfilePhoto(file).pipe(
+                        tapResponse({
+                            next: (response) => { 
+                                auth.updatePhotoUrl(response.photoUrl); 
+                                patchState(store, { loading: false, error: null });
+                            },
+                            error: (err: any) => {
+                                patchState(store, { 
+                                    error: err.error?.message || 'Greška pri uploadu', 
+                                    loading: false 
+                                });
+                            }
+                        })
+                    )
+                )
+            )
         )
-
     }))
 )

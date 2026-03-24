@@ -1,4 +1,4 @@
-﻿using Core.DTOs;
+﻿using Core.DTOs.Message;
 using Core.Interfaces;
 using System.Threading.Channels;
 

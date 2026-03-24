@@ -1,5 +1,5 @@
-﻿using Core.Types;
-using Core.DTOs;
+﻿using Core.DTOs.Auth;
+using Core.Types;
 
 namespace Core.Interfaces
 {
