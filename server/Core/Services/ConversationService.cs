@@ -36,9 +36,10 @@ namespace Core.Services
                             .Select(m => new MessageResponse(
                                 m.Author != null ? (m.Author.Username ?? "Unknown") : "Unknown",
                                 m.Content,
-                                m.CreatedAt
+                                m.CreatedAt,
+                                m.Author.PhotoUrl
                             )).ToList(),
-                        c.Participants.Select( p => new ParticipantNames(p.User.Username, p.UserId)).ToList(),
+                        c.Participants.Select( p => new ParticipantNames(p.User.Username, p.UserId, p.User.PhotoUrl)).ToList(),
                         c.AdminId
                     ))
                     .FirstOrDefaultAsync(cancellationToken);
@@ -249,7 +250,7 @@ namespace Core.Services
 
             var participantsData = await _context._users
                 .Where(u => newIdsToAdd.Contains(u.Id))
-                .Select(u => new ParticipantNames(u.Username, u.Id))
+                .Select(u => new ParticipantNames(u.Username, u.Id, u.PhotoUrl))
                 .ToListAsync(cancellationToken);
 
 

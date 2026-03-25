@@ -1,10 +1,65 @@
 <div class="welcome-container d-flex flex-column align-items-center justify-content-center h-100 text-center p-4">
+    <div class="search-section w-100" style="max-width: 500px;">
+        <mat-form-field class="w-100" appearance="outline">
+            <mat-label>Search users by username...</mat-label>
+            <input matInput (input)="onSearchChange($event)" #searchInput>
+        </mat-form-field>
+
+        <div class="results-container shadow-sm border rounded bg-white" style="max-height: 300px; overflow-y: auto;">
+
+            <mat-nav-list>
+                @if (userStore.loading()) {
+                <div class="d-flex justify-content-center p-3">
+                    <mat-spinner diameter="30"></mat-spinner>
+                </div>
+                }
+
+                @for (user of userStore.filteredUsers(); track user.id) {
+                <mat-list-item
+                    (click)="openPrivateChat({username: user.username, userId: user.id, photoUrl: user.photoUrl})"
+                    class="user-list-item py-2">
+
+                    <div matListItemIcon class="avatar-wrapper">
+                        @if (user.photoUrl) {
+                        <img [src]="imageBaseUrl + user.photoUrl" class="user-avatar shadow-sm">
+                        } @else {
+                        <div class="avatar-placeholder">
+                            <mat-icon>person</mat-icon>
+                        </div>
+                        }
+                    </div>
+
+                    <div matListItemTitle class="d-flex justify-content-between align-items-center w-100">
+                        <span class="fw-bold user-name-text">{{ user.username }}</span>
+
+                        @if (user.status) {
+                        <div class="status-badge d-flex align-items-center gap-1" [title]="user.status.status">
+                            <mat-icon class="status-icon-mini">{{ getStatusIcon(user.status.emoji) }}</mat-icon>
+                            <span class="status-label">{{ user.status.status }}</span>
+                        </div>
+                        }
+                    </div>
+
+                    <span matListItemLine class="text-muted extra-small mt-1">
+                        Click to start conversation
+                    </span>
+                </mat-list-item>
+                } @empty {
+                @if (!userStore.loading() && searchInput.value) {
+                <div class="p-3 text-center text-muted">
+                    No users found for "{{ searchInput.value }}"
+                </div>
+                }
+                }
+            </mat-nav-list>
+        </div>
+    </div>
     <div class="icon-pulse mb-4">
         <i class="bi bi-chat-dots-fill text-primary" style="font-size: 5rem;"></i>
     </div>
     <h2 class="display-6 fw-bold mb-2">Hi, time to start conversations!</h2>
     <p class="lead mb-4">Create new conversations or chose existing one from the sidebar on the left.</p>
-    
+
     <div class="badge-status d-flex align-items-center gap-2">
         <span class="dot-online"></span>
         <small class="text-uppercase tracking-wider fw-semibold text-secondary">Ready for new messages</small>

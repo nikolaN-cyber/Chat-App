@@ -1,3 +1,5 @@
+import { MessageResponse } from "./message";
+
 export interface ConversationResponse {
     id: number;
     title: string;
@@ -29,13 +31,8 @@ export interface AddUsersRequest {
     conversationId: number;
 }
 
-export interface MessageResponse {
-    authorUsername: string;
-    content: string;
-    createdAt: string;
-}
-
 export interface ParticipantNames {
     username: string;
     userId: number;
+    photoUrl: string;
 }

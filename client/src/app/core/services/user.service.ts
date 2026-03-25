@@ -2,8 +2,8 @@ import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { environment } from "../../../environments/environment.development";
 import { Message } from "../models/message";
-import { MessageResponse } from "../models/conversation";
-import { PhotoUpdateResponse, UserSearchResponse } from "../models/user";
+import { MessageResponse } from "../models/message";
+import { PhotoUpdateResponse, UserSearchResponse, UserStatusRequest, UserStatusResponse } from "../models/user";
 
 @Injectable({
     providedIn: 'root'
@@ -26,5 +26,13 @@ export class UserService {
         formData.append('file', file);
 
         return this.http.post<PhotoUpdateResponse>(`${this.apiUrl}/add-photo`, formData);
+    }
+
+    updateStatus(request: UserStatusRequest){
+        return this.http.post<UserStatusResponse>(`${this.apiUrl}/update-status`, request);
+    }
+
+    getStatus(){
+        return this.http.get<UserStatusResponse>(`${this.apiUrl}/get-user-status`);
     }
 }

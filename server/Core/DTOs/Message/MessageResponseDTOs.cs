@@ -3,5 +3,6 @@
 public record MessageResponse(
     string AuthorUsername,
     string Content,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string AuthorProfilePicture
 );

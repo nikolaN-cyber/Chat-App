@@ -9,6 +9,7 @@ using System.Text;
 using Core.DTOs.Auth;
 using Domain.Entities;
 using Infrastructure.Contexts;
+using Core.DTOs.UserStatus;
 
 namespace Core.Services
 {
@@ -51,7 +52,7 @@ namespace Core.Services
 
         public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginData request, CancellationToken cancellationToken)
         {
-            var user = await _context._users.FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
+            var user = await _context._users.Include(u => u.UserStatus).FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
             if (user == null || !BCrypt.Net.BCrypt.EnhancedVerify(request.Password, user.Password))
             {
                 return ApiResponse<LoginResponse>.FailureResponse("Invalid credentials");

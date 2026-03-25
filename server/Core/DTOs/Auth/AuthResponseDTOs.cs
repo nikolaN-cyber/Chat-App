@@ -1,2 +1,4 @@
-﻿namespace Core.DTOs.Auth;
+﻿using Core.DTOs.UserStatus;
+
+namespace Core.DTOs.Auth;
 public record LoginResponse(int Id, string Username, string FirstName, string LastName, int Age, string Email, string PhotoUrl, string AccessToken);

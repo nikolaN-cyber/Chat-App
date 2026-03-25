@@ -7,4 +7,5 @@ export interface MessageResponse {
     authorUsername: string;
     content: string;
     createdAt: string;
+    authorProfilePicture: string;
 }

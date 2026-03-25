@@ -75,3 +75,21 @@
 .deleteChatIcon, .optionsChatIcon {
   color: black;
 }
+
+.msg-picture {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.1);
+  object-fit: cover;
+}
+
+.success-toast {
+  --mdc-snackbar-container-color: #2e7d32;
+  --mdc-snackbar-label-text-color: white;
+}
+
+.warning-toast {
+  --mdc-snackbar-container-color: #ed6c02;
+  --mdc-snackbar-label-text-color: white;
+}

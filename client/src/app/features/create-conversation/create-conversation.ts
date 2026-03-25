@@ -10,10 +10,11 @@ import { MatLabel } from '@angular/material/input';
 import { CreateConversationData } from '../../core/models/conversation';
 import { Chip } from '../../shared/components/chip/chip';
 import { MatIconModule } from '@angular/material/icon';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-create-conversation',
-  imports: [MatFormField, MatAutocompleteModule, MatProgressSpinner, MatChipsModule, MatLabel, MatInputModule, Chip, MatIconModule],
+  imports: [FormsModule, MatFormField, MatAutocompleteModule, MatProgressSpinner, MatChipsModule, MatLabel, MatInputModule, Chip, MatIconModule],
   templateUrl: './create-conversation.html'
 })
 export class CreateConversation {

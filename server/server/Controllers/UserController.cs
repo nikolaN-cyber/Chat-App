@@ -6,6 +6,7 @@ using Infrastructure.Contexts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Core.DTOs.UserStatus;
 
 namespace server.Controllers
 {
@@ -88,6 +89,30 @@ namespace server.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        [HttpPost("update-status")]
+        public async Task<IActionResult> AddStatus([FromBody] AddStatus request, CancellationToken cancellationToken)
+        {
+            var result = await _userService.UpdateUserStatusAsync(request, cancellationToken);
+            if (!result.Success)
+            {
+                if (result.Message == "Unauthorized") return Unauthorized(result);
+                return BadRequest(result);
+            }
+            return Ok(result.Data);
+        }
+
+        [HttpGet("get-user-status")]
+        public async Task<IActionResult> GetStatus(CancellationToken cancellationToken)
+        {
+            var result = await _userService.GetUserStatusAsync(cancellationToken);
+            if (!result.Success)
+            {
+                if (result.Message == "Unauthorized") return Unauthorized(result);
+                return BadRequest(result);
+            }
+            return Ok(result.Data);
         }
     }
 }

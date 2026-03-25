@@ -6,6 +6,8 @@ using Core.DTOs.User;
 using Core.DTOs.Message;
 using Core.Helpers;
 using Infrastructure.Contexts;
+using Core.DTOs.UserStatus;
+using Org.BouncyCastle.Bcpg.Sig;
 
 namespace Core.Services
 {
@@ -59,7 +61,12 @@ namespace Core.Services
 
         public async Task<ApiResponse<List<UserSummaryResponse>>> GetAllUsersAsync(CancellationToken cancellationToken)
         {
-            var users = await _context._users.Select(u => new UserSummaryResponse(u.Id, u.Username)).ToListAsync(cancellationToken);
+            var users = await _context._users.Include(u => u.UserStatus).Select(u => new UserSummaryResponse
+            (u.Id, 
+            u.Username, 
+            u.PhotoUrl,
+            u.UserStatus != null ? new StatusResponse( u.UserStatus.Emoji, u.UserStatus.Status ) : null
+            )).ToListAsync(cancellationToken);
             return ApiResponse<List<UserSummaryResponse>>.SuccessResponse(users, "Users retreived successfully");
         }
 
@@ -119,9 +126,9 @@ namespace Core.Services
             var response = new MessageResponse(
                 sender.Username,
                 message.Content,
-                message.CreatedAt
+                message.CreatedAt,
+                sender.PhotoUrl
             );
-
             return ApiResponse<MessageResponse>.SuccessResponse(response);
         }
 
@@ -137,8 +144,77 @@ namespace Core.Services
                 return ApiResponse<List<UserSummaryResponse>>.SuccessResponse(new List<UserSummaryResponse>());
             }
             var cleanFilter = filter.Trim();
-            var users = await _context._users.Where(u => u.Id != currentUserId).Where(u => u.Username.StartsWith(cleanFilter)).Select(u => new UserSummaryResponse(u.Id, u.Username)).ToListAsync(cancellationToken);
+            var users = await _context._users.Include(u => u.UserStatus).Where(u => u.Id != currentUserId).Where(u => u.Username.StartsWith(cleanFilter)).Select(u => new UserSummaryResponse(
+                u.Id,
+                u.Username,
+                u.PhotoUrl,
+                (u.UserStatus != null && u.UserStatus.ExpiresAt > DateTime.UtcNow)
+                    ? new StatusResponse(u.UserStatus.Emoji, u.UserStatus.Status)
+                    : null
+                )).ToListAsync(cancellationToken);
             return ApiResponse<List<UserSummaryResponse>>.SuccessResponse(users);
+        }
+
+        public async Task<ApiResponse<StatusResponse>> UpdateUserStatusAsync(AddStatus request, CancellationToken cancellationToken)
+        {
+            int currentUserId = _currentUserService.GetCurrentUserId();
+            if (currentUserId == 0)
+            {
+                return ApiResponse<StatusResponse>.FailureResponse("Unauthorized");
+            }
+
+            var validStatuses = new[] { "onvacation", "workingremotely" };
+
+            if (!validStatuses.Contains(request.Status))
+            {
+                return ApiResponse<StatusResponse>.FailureResponse("Invalid status");
+            }
+            if (request.ExpiresAt < DateTime.UtcNow)
+            {
+                return ApiResponse<StatusResponse>.FailureResponse("Invalid expiration time");
+            }
+
+            var existingStatus = await _context._userStatuses.FirstOrDefaultAsync(us => us.UserId == currentUserId, cancellationToken);
+
+            if (existingStatus != null)
+            {
+                existingStatus.Emoji = request.Emoji;
+                existingStatus.Status = request.Status;
+                existingStatus.ExpiresAt = request.ExpiresAt;
+                _context._userStatuses.Update(existingStatus);
+            } else
+            {
+                var newStatus = new UserStatus
+                {
+                    Emoji = request.Emoji,
+                    Status = request.Status,
+                    ExpiresAt = request.ExpiresAt,
+                    UserId = currentUserId,
+                };
+                _context._userStatuses.Add(newStatus);
+            }
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return ApiResponse<StatusResponse>.SuccessResponse(new StatusResponse(request.Emoji, request.Status));
+        }
+
+        public async Task<ApiResponse<StatusResponse>> GetUserStatusAsync(CancellationToken cancellationToken)
+        {
+            int currentUserId = _currentUserService.GetCurrentUserId();
+            if (currentUserId == 0)
+            {
+                return ApiResponse<StatusResponse>.FailureResponse("Unauthorized");
+            }
+
+            var status = await _context._userStatuses.FirstOrDefaultAsync(us => us.UserId == currentUserId, cancellationToken);
+            if (status == null)
+            {
+                return ApiResponse<StatusResponse>.FailureResponse("Status does not exist");
+            }
+
+            var newStatusResponse = new StatusResponse(status.Emoji, status.Status);
+
+            return ApiResponse<StatusResponse>.SuccessResponse(newStatusResponse);
         }
     }
 }

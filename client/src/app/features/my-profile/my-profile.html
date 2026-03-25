@@ -3,11 +3,11 @@
     <div class="profile-header d-flex flex-column align-items-center p-4">
       <div class="avatar-wrapper mb-3">
         @if (user()?.photoUrl) {
-          <img [src]="imageBaseUrl + user()?.photoUrl" class="profile-avatar shadow">
+        <img [src]="imageBaseUrl + user()?.photoUrl" class="profile-avatar shadow">
         } @else {
-          <div class="profile-avatar-placeholder shadow">
-            <mat-icon>person</mat-icon>
-          </div>
+        <div class="profile-avatar-placeholder shadow">
+          <mat-icon>person</mat-icon>
+        </div>
         }
       </div>
       <h2 class="fw-bold mb-0 text-white">{{ user()?.firstName }} {{ user()?.lastName }}</h2>
@@ -16,7 +16,7 @@
 
     <mat-card-content class="p-4">
       <div class="profile-details">
-        
+
         <div class="detail-item d-flex align-items-center mb-3">
           <div class="detail-icon-bg me-3">
             <mat-icon>email</mat-icon>
@@ -47,13 +47,45 @@
           </div>
         </div>
 
+        <div class="detail-item d-flex align-items-center mb-3">
+          <div class="detail-icon-bg me-3">
+            <mat-icon color="primary">
+              {{ userStatusStore.currentStatus()?.emoji || 'sentiment_satisfied' }}
+            </mat-icon>
+          </div>
+          <div class="d-flex flex-column">
+            <small class="text-muted text-uppercase fw-bold">Current Status</small>
+            <span class="fw-medium">
+              @if (userStatusStore.loading()) {
+              <span class="text-muted small">Updating...</span>
+              } @else {
+              {{ userStatusStore.currentStatus()?.status || 'No status set' }}
+              }
+            </span>
+          </div>
+        </div>
+
       </div>
     </mat-card-content>
 
     <mat-card-actions class="p-3 border-top d-flex justify-content-end">
-      <button mat-button color="primary">
-        <mat-icon class="me-1">edit</mat-icon> EDIT PROFILE
+      <button mat-button color="primary" [matMenuTriggerFor]="statusMenu">
+        <mat-icon class="me-1">add_reaction</mat-icon> ADD STATUS
       </button>
     </mat-card-actions>
+
+    <mat-menu #statusMenu="matMenu" xPosition="before">
+      @for (option of statusOptions; track option.status) {
+      <button mat-menu-item (click)="onStatusChange(option)">
+        @if (option.emoji === "palm-tree") {
+          <mat-icon>flight</mat-icon>
+        } @else {
+          <mat-icon>house</mat-icon>
+        }
+        <span>{{ formatStatusLabel(option.status) }}</span>
+        <small class="text-muted ms-2">until {{ option.expiresAt | date:'HH:mm' }}</small>
+      </button>
+      }
+    </mat-menu>
   </mat-card>
 </div>

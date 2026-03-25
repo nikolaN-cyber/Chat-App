@@ -1,7 +1,20 @@
 <div class="chat-wrapper d-flex flex-column vh-100">
   <header class="chat-header p-3 border-bottom d-flex align-items-center bg-white justify-content-between">
-    <div class="d-flex align-items-center">
-      <mat-icon class="me-2">account_circle</mat-icon>
+    <div class="d-flex gap-2 align-items-center">
+      @if (isGroup()) {
+      <div class="group-icon-circle shadow-sm">
+        <mat-icon>groups</mat-icon>
+      </div>
+      } @else {
+      @let otherUser = chatStore.otherUser();
+      @if (otherUser?.photoUrl) {
+      <img [src]="imageBaseUrl + otherUser?.photoUrl" class="msg-picture shadow-sm">
+      } @else {
+      <div class="user-icon-circle shadow-sm">
+        <mat-icon>person</mat-icon>
+      </div>
+      }
+      }
       <h6 class="chat-header-title m-0 fw-bold">
         {{ selectedConvTitle() }}
       </h6>
@@ -12,7 +25,8 @@
         <mat-icon>settings</mat-icon>
       </button>
 
-      <button (click)="deleteChat()" [disabled]="convStore.loading()" title="Delete chat" mat-fab class="deleteChatIcon">
+      <button (click)="deleteChat()" [disabled]="convStore.loading()" title="Delete chat" mat-fab
+        class="deleteChatIcon">
         <mat-icon>delete</mat-icon>
       </button>
     </div>
@@ -20,46 +34,46 @@
 
   <div #scrollContainer class="messages-container flex-grow-1 overflow-auto p-3">
     @if (chatStore.loading()) {
-      <div class="d-flex justify-content-center p-5">
-        <mat-spinner diameter="40"></mat-spinner>
-      </div>
+    <div class="d-flex justify-content-center p-5">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
     } @else {
-      @for (msg of chatStore.messages(); track msg.createdAt) {
-        @let isMe = msg.authorUsername === authStore.currentUser()?.username;
+    @for (msg of chatStore.messages(); track msg.createdAt) {
+    @let isMe = msg.authorUsername === authStore.currentUser()?.username;
 
-        <div class="message-row d-flex mb-3 w-100" [class.justify-content-end]="isMe">
-          <div class="message-bubble p-2 px-3 shadow-sm" 
-               [class.my-message]="isMe" 
-               [class.other-message]="!isMe">
+    <div class="message-row d-flex mb-3 w-100" [class.justify-content-end]="isMe">
+      <div class="message-bubble p-2 px-3 shadow-sm" [class.my-message]="isMe" [class.other-message]="!isMe">
 
-            @if (!isMe) {
-              <div class="small fw-bold mb-1 author-name">
-                {{ msg.authorUsername }}
-              </div>
-            }
-
-            <div class="message-content text-break">{{ msg.content }}</div>
-
-            <div class="message-time text-end mt-1" style="font-size: 0.7rem; opacity: 0.8;">
-              {{ msg.createdAt | date:'HH:mm' }}
-            </div>
-          </div>
+        @if (!isMe) {
+        <div class="small fw-bold mb-1 author-name">
+          @if (msg.authorProfilePicture) {
+          <img class="msg-picture" [src]="imageBaseUrl + msg.authorProfilePicture">
+          } @else {
+          <mat-icon>person</mat-icon>
+          }
+          {{ msg.authorUsername }}
         </div>
-      } @empty {
-        <div class="d-flex justify-content-center align-items-center h-100">
-          <p>There are no messages. Start chatting!</p>
+        }
+
+        <div class="message-content text-break">{{ msg.content }}</div>
+
+        <div class="message-time text-end mt-1" style="font-size: 0.7rem; opacity: 0.8;">
+          {{ msg.createdAt | date:'HH:mm' }}
         </div>
-      }
+      </div>
+    </div>
+    } @empty {
+    <div class="d-flex justify-content-center align-items-center h-100">
+      <p>There are no messages. Start chatting!</p>
+    </div>
+    }
     }
   </div>
 
   <footer class="chat-footer p-3 border-top bg-white">
     <form [formGroup]="sendMessageForm" (ngSubmit)="onSubmit()">
       <div class="d-flex gap-2 align-items-center w-100">
-        <input formControlName="content" 
-               placeholder="Send a message..." 
-               type="text"
-               class="chat-input flex-grow-1">
+        <input formControlName="content" placeholder="Send a message..." type="text" class="chat-input flex-grow-1">
         <button mat-fab color="primary" type="submit" [disabled]="sendMessageForm.invalid">
           <mat-icon>send</mat-icon>
         </button>

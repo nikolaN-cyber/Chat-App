@@ -27,8 +27,21 @@ export interface LoginResponse{
 export interface UserSearchResponse{
     id: number;
     username: string;
+    photoUrl: string;
+    status: UserStatusResponse;
 }
 
 export interface PhotoUpdateResponse {
     photoUrl: string;
+}
+
+export interface UserStatusRequest {
+    emoji: string;
+    status: string;
+    expiresAt: string;
+}
+
+export interface UserStatusResponse {
+    emoji: string;
+    status: string;
 }

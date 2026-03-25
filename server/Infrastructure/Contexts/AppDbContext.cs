@@ -12,6 +12,7 @@ namespace Infrastructure.Contexts
         public DbSet<Message> _messages => Set<Message>();
         public DbSet<Conversation> _conversation => Set<Conversation>();
         public DbSet<Participation> _participations => Set<Participation>();
+        public DbSet<UserStatus> _userStatuses => Set<UserStatus>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -12,6 +12,7 @@
         public string Password { get; set; }
         public DateTime LastActive { get; set; } = DateTime.UtcNow;
         public string? PhotoUrl { get; set; }
+        public UserStatus? UserStatus { get; set; } = null;
         public List<Participation> Participations { get; set; } = new();
         public List<Conversation> AdminAt { get; set; } = new();
     }

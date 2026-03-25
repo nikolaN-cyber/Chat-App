@@ -1,4 +1,4 @@
-import { Component, effect, ElementRef, inject, OnDestroy, signal, untracked, ViewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, OnDestroy, signal, untracked, ViewChild } from '@angular/core';
 import { conversationsStore } from '../../shared/store/conversations.store';
 import { chatStore } from '../../shared/store/chat.store';
 import { authStore } from '../../shared/store/auth.store';
@@ -14,6 +14,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { ChatSignalRService } from '../../core/services/chat-signalr.service';
+import { environment } from '../../../environments/environment.development';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-chat',
@@ -27,7 +29,8 @@ import { ChatSignalRService } from '../../core/services/chat-signalr.service';
     MatInputModule,
     CommonModule,
     ReactiveFormsModule,
-    RouterLink
+    RouterLink,
+    MatSnackBarModule
 ],
   templateUrl: './chat.html',
   styleUrl: './chat.css',
@@ -40,6 +43,8 @@ export class Chat implements OnDestroy {
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
 
+  public imageBaseUrl = environment.imageBaseUrl; 
+
   routeId = toSignal(
     this.route.paramMap.pipe(
       map(params => Number(params.get('id')))
@@ -50,14 +55,35 @@ export class Chat implements OnDestroy {
     content: ['', [Validators.required, Validators.maxLength(500)]],
   });
 
+  private snackBar = inject(MatSnackBar);
   readonly chatStore = inject(chatStore);
   readonly convStore = inject(conversationsStore);
   readonly authStore = inject(authStore);
   private signalrService = inject(ChatSignalRService);
 
+  isGroup = computed(() => {
+    const currentId = this.routeId();
+    const conversations = this.convStore.conversations;
+    return !!conversations()?.find(c => c.id === currentId)?.isGroup;
+  })
+
   constructor() {
 
     effect(() => {
+      const lastAdded = this.chatStore.lastAdded();
+      const lastRemoved = this.chatStore.lastRemoved();
+
+      if (lastAdded) {
+        this.showToast(`User ${lastAdded} was added`, 'success-snackbar');
+      }
+
+      if (lastRemoved) {
+        this.showToast(`User ${lastRemoved} was removed`, 'warning-snackbar');
+      }
+    });
+
+    effect(() => {
+
       const currentId = this.routeId();
       if (currentId === undefined || currentId === null) return;
 
@@ -106,6 +132,15 @@ export class Chat implements OnDestroy {
     if (currentConvId && confirm("Are you sure that you want to delete this chat?")) {
       this.convStore.deleteConversation(currentConvId);
     }
+  }
+
+  showToast(message: string, panelClass: string){
+    this.snackBar.open(message, 'Close', {
+      duration: 3000,
+      horizontalPosition: 'right',
+      verticalPosition: 'bottom',
+      panelClass: [panelClass]
+    });
   }
 
   ngOnDestroy(): void {
