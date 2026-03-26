@@ -16,6 +16,7 @@ import { map } from 'rxjs';
 import { ChatSignalRService } from '../../core/services/chat-signalr.service';
 import { environment } from '../../../environments/environment.development';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { FileService } from '../../core/services/file.service';
 
 @Component({
   selector: 'app-chat',
@@ -31,7 +32,7 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
     ReactiveFormsModule,
     RouterLink,
     MatSnackBarModule
-],
+  ],
   templateUrl: './chat.html',
   styleUrl: './chat.css',
 })
@@ -43,7 +44,7 @@ export class Chat implements OnDestroy {
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
 
-  public imageBaseUrl = environment.imageBaseUrl; 
+  public imageBaseUrl = environment.imageBaseUrl;
 
   routeId = toSignal(
     this.route.paramMap.pipe(
@@ -56,6 +57,7 @@ export class Chat implements OnDestroy {
   });
 
   private snackBar = inject(MatSnackBar);
+  private readonly fileService = inject(FileService);
   readonly chatStore = inject(chatStore);
   readonly convStore = inject(conversationsStore);
   readonly authStore = inject(authStore);
@@ -70,19 +72,6 @@ export class Chat implements OnDestroy {
   constructor() {
 
     effect(() => {
-      const lastAdded = this.chatStore.lastAdded();
-      const lastRemoved = this.chatStore.lastRemoved();
-
-      if (lastAdded) {
-        this.showToast(`User ${lastAdded} was added`, 'success-snackbar');
-      }
-
-      if (lastRemoved) {
-        this.showToast(`User ${lastRemoved} was removed`, 'warning-snackbar');
-      }
-    });
-
-    effect(() => {
 
       const currentId = this.routeId();
       if (currentId === undefined || currentId === null) return;
@@ -93,7 +82,7 @@ export class Chat implements OnDestroy {
       untracked(() => {
         if (this.chatStore.currentConversationId() !== currentId) {
           this.chatStore.loadChat(currentId);
-        } 
+        }
         this.signalrService.joinConversation(currentId);
       });
     });
@@ -127,6 +116,38 @@ export class Chat implements OnDestroy {
     }
   }
 
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    if (!file) return;
+    const currentConvId = this.routeId();
+    if (!file || currentConvId === undefined) {
+      return;
+    }
+
+    this.fileService.uploadFile(file).subscribe(fileData => {
+      const messagePayload = {
+        content: this.sendMessageForm.value.content || '',
+        conversationId: currentConvId,
+        fileUrl: fileData.url,
+        fileType: fileData.type
+      };
+      this.chatStore.sendMessage(messagePayload);
+    });
+  }
+
+  openFullImage(path: string) {
+    window.open(this.imageBaseUrl + path, '_blank');
+  }
+
+  getCleanUrl(fileUrl: string): string {
+  if (!fileUrl) return '';
+  
+  const base = this.imageBaseUrl.endsWith('/') ? this.imageBaseUrl.slice(0, -1) : this.imageBaseUrl;
+  const path = fileUrl.startsWith('/') ? fileUrl : '/' + fileUrl;
+  
+  return base + path;
+}
+
   deleteChat() {
     const currentConvId = this.routeId();
     if (currentConvId && confirm("Are you sure that you want to delete this chat?")) {
@@ -134,14 +155,7 @@ export class Chat implements OnDestroy {
     }
   }
 
-  showToast(message: string, panelClass: string){
-    this.snackBar.open(message, 'Close', {
-      duration: 3000,
-      horizontalPosition: 'right',
-      verticalPosition: 'bottom',
-      panelClass: [panelClass]
-    });
-  }
+  
 
   ngOnDestroy(): void {
     const currentId = this.routeId();

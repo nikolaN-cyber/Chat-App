@@ -43,13 +43,19 @@ export const conversationsStore = signalStore(
 
                                     let updatedConversations;
 
-                                    
-                                    updatedConversations = [data, ...currentConversations];
-                                    
+                                    if (index !== -1) {                                       
+                                        updatedConversations = [...currentConversations];
+                                        updatedConversations[index] = data;
+                                    } else {
+                                        updatedConversations = [data, ...currentConversations];
+                                    }
 
-                                    return { conversations: updatedConversations, loading: false };
+                                    return {
+                                        conversations: updatedConversations,
+                                        loading: false,
+                                        error: null
+                                    };
                                 });
-
 
                                 router.navigate(['home/chat', data.id]);
                             },

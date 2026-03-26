@@ -35,7 +35,9 @@ namespace Core.Services
                                 m.Author != null ? (m.Author.Username ?? "Unknown") : "Unknown",
                                 m.Content,
                                 m.CreatedAt,
-                                m.Author.PhotoUrl
+                                m.Author.PhotoUrl,
+                                m.FileUrl,
+                                m.FileType
                             )).ToList(),
                         c.Participants.Select( p => new ParticipantNames(p.User.Username, p.UserId, p.User.PhotoUrl)).ToList(),
                         c.AdminId

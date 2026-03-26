@@ -1,12 +1,13 @@
-﻿using Core.DTOs.User;
-using Core.DTOs.Message;
+﻿using Core.DTOs.Message;
+using Core.DTOs.User;
+using Core.DTOs.UserStatus;
 using Core.Hubs;
 using Core.Interfaces;
+using Core.Types;
 using Infrastructure.Contexts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Core.DTOs.UserStatus;
 
 namespace server.Controllers
 {
@@ -64,7 +65,7 @@ namespace server.Controllers
             try
             {
                 var photoUrl = await _photoService.UpdateUserPhotoAsync(file, cancellationToken);
-                return Ok(new { url = photoUrl });
+                return Ok(ApiResponse<object>.SuccessResponse(new { url = photoUrl }));
             }
             catch (Exception ex)
             {

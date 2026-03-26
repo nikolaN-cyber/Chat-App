@@ -1,3 +1,4 @@
+using Core.Handlers;
 using Core.Helpers;
 using Core.Hubs;
 using Core.Interfaces;
@@ -5,11 +6,11 @@ using Core.Services;
 using Core.Workers;
 using Infrastructure.Contexts;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Prometheus;
-using Core.Handlers;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
+builder.Services.AddScoped<FileService>();
 
 //Email infrastructure
 builder.Services.AddSingleton<IEmailQueue, EmailQueue>();
@@ -93,10 +95,18 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+var provider = new FileExtensionContentTypeProvider();
+provider.Mappings[".cs"] = "text/plain";
+
 //App building and middleware pipelines
 var app = builder.Build();
 
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = provider,
+    ServeUnknownFileTypes = true,
+    DefaultContentType = "application/octet-stream"
+});
 
 app.UseRouting();
 

@@ -37,9 +37,8 @@ export const userStore = signalStore(
         ),
         updatePhoto: rxMethod<File>(
             pipe(
-                tap(() => {patchState(store, { loading: true }); console.log("Hello from update photo")}),
+                tap(() => {patchState(store, { loading: true });}),
                 switchMap((file) => {
-                    console.log("Ulazim ovde")
                     return userService.addProfilePhoto(file).pipe(
                         tapResponse({
                             next: (response) => { 

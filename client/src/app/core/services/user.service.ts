@@ -22,7 +22,7 @@ export class UserService {
     searchUsersByUsername(filter: string) {
         const params = new HttpParams().set('filter', filter);
         return this.http.get<ApiResponse<UserSearchResponse[]>>(`${this.apiUrl}/search-by-username`, { params }).pipe(
-            map(res => res.data ?? []) 
+            map(res => res.data ?? [])
         );
     }
 

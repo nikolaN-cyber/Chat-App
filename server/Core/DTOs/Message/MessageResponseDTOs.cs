@@ -4,5 +4,7 @@ public record MessageResponse(
     string AuthorUsername,
     string Content,
     DateTime CreatedAt,
-    string AuthorProfilePicture
+    string AuthorProfilePicture,
+    string? FileUrl,
+    string? FileType
 );

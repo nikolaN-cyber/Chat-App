@@ -1,6 +1,8 @@
 export interface Message {
     content: string;
     conversationId: number;
+    fileUrl?: string; 
+    fileType?: string;
 }
 
 export interface MessageResponse {
@@ -8,4 +10,6 @@ export interface MessageResponse {
     content: string;
     createdAt: string;
     authorProfilePicture: string;
+    fileUrl: string;
+    fileType: string;
 }

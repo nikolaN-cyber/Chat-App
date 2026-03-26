@@ -4,6 +4,8 @@
     {
         public int Id { get; set; }
         public string Content { get; set; }
+        public string? FileUrl { get; set; }
+        public string? FileType { get; set; }
         public DateTime CreatedAt { get; set; }
         public int AuthorId { get; set; }
         public User? Author { get; set; } = null;

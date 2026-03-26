@@ -90,6 +90,8 @@ namespace Core.Services
             {
                 Content = request.Content,
                 CreatedAt = DateTime.UtcNow,
+                FileUrl = request.FileUrl,
+                FileType = request.FileType,
                 AuthorId = currentUserId,
                 ConversationId = request.ConversationId
             };
@@ -126,7 +128,9 @@ namespace Core.Services
                 sender.Username,
                 message.Content,
                 message.CreatedAt,
-                sender.PhotoUrl
+                sender.PhotoUrl,
+                message.FileUrl,
+                message.FileType
             );
             return ApiResponse<MessageResponse>.SuccessResponse(response);
         }
