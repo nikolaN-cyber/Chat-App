@@ -21,12 +21,7 @@ namespace server.Controllers
         public async Task<IActionResult> GetDirectConversation([FromRoute] int targetUserId, CancellationToken cancellationToken)
         {
             var response = await _conversationService.GetConversation(targetUserId, cancellationToken);
-            if (!response.Success)
-            {
-                if (response.Message == "Unauthorized") return Unauthorized(response);
-                else return BadRequest(response);
-            }
-            return Ok(response.Data);
+            return Ok(response);
         }
 
         [Authorize]
@@ -34,12 +29,7 @@ namespace server.Controllers
         public async Task<IActionResult> GetUserConversations(CancellationToken cancellationToken)
         {
             var response = await _conversationService.GetUserConversationsAsync(cancellationToken);
-            if (!response.Success)
-            {
-                if (response.Message == "Unauthorized") return Unauthorized(response);
-                else return BadRequest(response);
-            }
-            return Ok(response.Data);
+            return Ok(response);
         }
 
         [Authorize]
@@ -47,12 +37,7 @@ namespace server.Controllers
         public async Task<IActionResult> CreateConversation([FromBody] CreateConversationData request, CancellationToken cancellationToken)
         {
             var response = await _conversationService.CreateConversation(request, cancellationToken);
-            if (!response.Success)
-            {
-                if (response.Message == "Unauthorized") return Unauthorized(response);
-                else return BadRequest(response);
-            }
-            return Ok(response.Data);
+            return Ok(response);
         }
 
         [Authorize]
@@ -60,12 +45,7 @@ namespace server.Controllers
         public async Task<IActionResult> DeleteConversation([FromRoute] int id, CancellationToken cancellationToken)
         {
             var response = await _conversationService.DeleteConversationAsync(id, cancellationToken);
-            if (!response.Success)
-            {
-                if (response.Message == "Unauthorized") return Unauthorized(response);
-                else return BadRequest(response);
-            }
-            return Ok(response.Data);
+            return Ok(response);
         }
 
         [Authorize]
@@ -77,12 +57,7 @@ namespace server.Controllers
                 conversationId
              );
             var response = await _conversationService.RemoveUserAsync(request, cancellationToken);
-            if (!response.Success)
-            {
-                if (response.Message == "Unauthorized") return Unauthorized(response);
-                else return BadRequest(response);
-            }
-            return Ok(response.Data);
+            return Ok(response);
         }
 
         [Authorize]
@@ -90,12 +65,7 @@ namespace server.Controllers
         public async Task<IActionResult> AddUser([FromBody] AddUsersRequest request, CancellationToken cancellationToken)
         {
             var response = await _conversationService.AddUserAsync(request, cancellationToken);
-            if (!response.Success)
-            {
-                if (response.Message == "Unauthorized") return Unauthorized(response);
-                else return BadRequest(response);
-            }
-            return Ok(response.Data);
+            return Ok(response);
         }
     }
 }

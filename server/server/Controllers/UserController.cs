@@ -31,11 +31,6 @@ namespace server.Controllers
         public async Task<IActionResult> Edit([FromBody] EditUserData request, CancellationToken cancellationToken)
         {
             var result = await _userService.EditAsync(request, cancellationToken);
-            if (!result.Success)
-            {
-                if (result.Message == "Unauthorized") return Unauthorized(result);
-                return BadRequest(result);
-            }
             return Ok(result);
         }
 
@@ -43,10 +38,6 @@ namespace server.Controllers
         public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
         {
             var result = await _userService.GetAllUsersAsync(cancellationToken);
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
             return Ok(result);
         }
 
@@ -54,27 +45,17 @@ namespace server.Controllers
         public async Task<IActionResult> SendMessage([FromBody] MessageData request, CancellationToken cancellationToken)
         {
             var result = await _userService.SendMessageAsync(request, cancellationToken);
-            if (!result.Success)
-            {
-                if (result.Message == "Unauthorized") return Unauthorized(result);
-                return BadRequest(result);
-            }
             await _hubContext.Clients
                     .Group(request.ConversationId.ToString())
                     .SendAsync("ReceiveMessage", result.Data);
-            return Ok(result.Data);
+            return Ok(result);
         }
 
         [HttpGet("search-by-username")]
         public async Task<IActionResult> FilterUsers([FromQuery] string? filter, CancellationToken cancellationToken)
         {
             var result = await _userService.FilterUsersByUsernameAsync(filter ?? "", cancellationToken);
-            if (!result.Success)
-            {
-                if (result.Message == "Unauthorized") return Unauthorized(result);
-                return BadRequest(result);
-            }
-            return Ok(result.Data);
+            return Ok(result);
         }
 
         [HttpPost("add-photo")]
@@ -95,24 +76,14 @@ namespace server.Controllers
         public async Task<IActionResult> AddStatus([FromBody] AddStatus request, CancellationToken cancellationToken)
         {
             var result = await _userService.UpdateUserStatusAsync(request, cancellationToken);
-            if (!result.Success)
-            {
-                if (result.Message == "Unauthorized") return Unauthorized(result);
-                return BadRequest(result);
-            }
-            return Ok(result.Data);
+            return Ok(result);
         }
 
         [HttpGet("get-user-status")]
         public async Task<IActionResult> GetStatus(CancellationToken cancellationToken)
         {
             var result = await _userService.GetUserStatusAsync(cancellationToken);
-            if (!result.Success)
-            {
-                if (result.Message == "Unauthorized") return Unauthorized(result);
-                return BadRequest(result);
-            }
-            return Ok(result.Data);
+            return Ok(result);
         }
     }
 }

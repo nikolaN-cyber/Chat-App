@@ -2,7 +2,7 @@ import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { authStore } from '../../shared/store/auth.store';
 
-export const authInterceptor: HttpInterceptorFn = (req, next) => {
+export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   const AuthStore = inject(authStore);
  
   const token = AuthStore.currentUser()?.accessToken;

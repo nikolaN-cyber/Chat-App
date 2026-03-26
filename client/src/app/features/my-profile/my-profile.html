@@ -1,7 +1,9 @@
 <div class="my-profile-container h-100 d-flex justify-content-center align-items-center">
   <mat-card class="profile-card shadow-lg border-0">
     <div class="profile-header d-flex flex-column align-items-center p-4">
-      <div class="avatar-wrapper mb-3">
+      <div class="avatar-wrapper mb-3" (click)="fileInput.click()" style="cursor: pointer;">
+        <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden>
+
         @if (user()?.photoUrl) {
         <img [src]="imageBaseUrl + user()?.photoUrl" class="profile-avatar shadow">
         } @else {
@@ -9,6 +11,10 @@
           <mat-icon>person</mat-icon>
         </div>
         }
+
+        <div class="avatar-overlay d-flex justify-content-center align-items-center">
+          <mat-icon class="text-white">photo_camera</mat-icon>
+        </div>
       </div>
       <h2 class="fw-bold mb-0 text-white">{{ user()?.firstName }} {{ user()?.lastName }}</h2>
       <span class="text-white-50">{{ '@' + user()?.username }}</span>
@@ -78,9 +84,9 @@
       @for (option of statusOptions; track option.status) {
       <button mat-menu-item (click)="onStatusChange(option)">
         @if (option.emoji === "palm-tree") {
-          <mat-icon>flight</mat-icon>
+        <mat-icon>flight</mat-icon>
         } @else {
-          <mat-icon>house</mat-icon>
+        <mat-icon>house</mat-icon>
         }
         <span>{{ formatStatusLabel(option.status) }}</span>
         <small class="text-muted ms-2">until {{ option.expiresAt | date:'HH:mm' }}</small>

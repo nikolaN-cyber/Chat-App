@@ -14,7 +14,7 @@
                 </div>
                 }
 
-                @for (user of userStore.filteredUsers(); track user.id) {
+                @for (user of (userStore.filteredUsers() || []); track user.id) {
                 <mat-list-item
                     (click)="openPrivateChat({username: user.username, userId: user.id, photoUrl: user.photoUrl})"
                     class="user-list-item py-2">

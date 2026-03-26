@@ -41,14 +41,14 @@ namespace server.Controllers
             {
                 _logger.LogWarning("Email queue is currently not working.");
             }
-            return Ok(result.Data);
+            return Ok(result);
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginData request, CancellationToken cancellationToken)
         {
             var result = await _authService.LoginAsync(request, cancellationToken);
-            return Ok(result.Data);
+            return Ok(result);
         }
     }
 }

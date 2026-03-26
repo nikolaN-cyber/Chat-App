@@ -35,23 +35,22 @@ export const conversationsStore = signalStore(
                     conversationService.createConversation(request).pipe(
                         tapResponse({
                             next: (data) => {
-                                patchState(store, (state) => {
-                                    const conversations = state.conversations || [];
-                                    const index = conversations.findIndex(c => c.id === data.id);
+                                if (!data) return;
 
-                                    if (index !== -1) {
-                                        const updatedConversations = [...conversations];
-                                        updatedConversations[index] = data;
-                                        return { conversations: updatedConversations, loading: false };
-                                    }
-                                    return {
-                                        conversations: state.conversations
-                                            ? [...state.conversations, data]
-                                            : [data],
-                                        loading: false,
-                                        error: null
-                                    };
+                                patchState(store, (state) => {
+                                    const currentConversations = state.conversations ?? [];
+                                    const index = currentConversations.findIndex(c => c.id === data.id);
+
+                                    let updatedConversations;
+
+                                    
+                                    updatedConversations = [data, ...currentConversations];
+                                    
+
+                                    return { conversations: updatedConversations, loading: false };
                                 });
+
+
                                 router.navigate(['home/chat', data.id]);
                             },
                             error: (err: any) => { patchState(store, { error: err.error?.message, loading: false }) }

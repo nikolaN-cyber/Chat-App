@@ -50,7 +50,6 @@ namespace Core.Services
             await _context.SaveChangesAsync(cancellationToken);
             return ApiResponse<bool>.SuccessResponse(true);
         }
-
         public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginData request, CancellationToken cancellationToken)
         {
             var user = await _context._users.Include(u => u.UserStatus).FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
@@ -70,7 +69,6 @@ namespace Core.Services
                 token
              ), "User successfully loged in");
         }
-
         private string GenerateJwtToken(User user)
         {
             var key = Encoding.UTF8.GetBytes(_config["jwt:key"]!);

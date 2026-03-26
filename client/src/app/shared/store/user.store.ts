@@ -28,7 +28,7 @@ export const userStore = signalStore(
                 switchMap((searchFilter) =>
                     userService.searchUsersByUsername(searchFilter).pipe(
                         tapResponse({
-                            next: (data) => { patchState(store, { filteredUsers: data, loading: false, error: null }) },
+                            next: (data) => { const users = data ?? []; patchState(store, { filteredUsers: users, loading: false, error: null }) },
                             error: (err: any) => { patchState(store, { error: err.error?.message, loading: false }) }
                         })
                     )
@@ -37,12 +37,15 @@ export const userStore = signalStore(
         ),
         updatePhoto: rxMethod<File>(
             pipe(
-                tap(() => patchState(store, { loading: true })),
-                switchMap((file) => 
-                    userService.addProfilePhoto(file).pipe(
+                tap(() => {patchState(store, { loading: true }); console.log("Hello from update photo")}),
+                switchMap((file) => {
+                    console.log("Ulazim ovde")
+                    return userService.addProfilePhoto(file).pipe(
                         tapResponse({
                             next: (response) => { 
-                                auth.updatePhotoUrl(response.photoUrl); 
+                                if (!response) return;
+                                console.log("Active")
+                                auth.updatePhotoUrl(response.url); 
                                 patchState(store, { loading: false, error: null });
                             },
                             error: (err: any) => {
@@ -53,6 +56,8 @@ export const userStore = signalStore(
                             }
                         })
                     )
+                
+                }
                 )
             )
         )

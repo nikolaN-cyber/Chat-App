@@ -9,6 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { UserStatusRequest } from '../../core/models/user';
 import { MatMenuModule } from '@angular/material/menu';
 import { DatePipe } from '@angular/common';
+import { userStore } from '../../shared/store/user.store';
 
 @Component({
   selector: 'app-my-profile',
@@ -25,6 +26,7 @@ import { DatePipe } from '@angular/common';
 })
 export class MyProfile {
   readonly authStore = inject(authStore);
+  readonly userStore = inject(userStore);
   readonly userStatusStore = inject(userStatusStore);
 
   getEndOfWorkDay() {
@@ -47,7 +49,7 @@ export class MyProfile {
   user = this.authStore.currentUser;
 
   public imageBaseUrl = environment.imageBaseUrl;
-  
+
   constructor() {
     this.userStatusStore.getStatus();
   }
@@ -72,4 +74,19 @@ export class MyProfile {
     if (status === 'workingremotely') return 'Working Remotely';
     return status;
   }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      console.log('Fajl izabran:', file.name, file.size, file.type); // <--- DEBUG 1
+
+      this.userStore.updatePhoto(file);
+      input.value = '';
+    } else {
+      console.log('Nijedan fajl nije izabran.');
+    }
+  }
 }
+

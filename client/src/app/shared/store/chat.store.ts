@@ -44,7 +44,7 @@ export const chatStore = signalStore(
                     console.log(conversationId);
                      return conversationService.getConversation(conversationId).pipe(
                         tapResponse({
-                            next: (data) => { patchState(store, { messages: data.messages, participants: data.participants, currentConversationId: data.id, adminId: data.adminId, loading: false, error: null }); },
+                            next: (data) => { if (data) {patchState(store, { messages: data.messages, participants: data.participants, currentConversationId: data.id, adminId: data.adminId, loading: false, error: null }); }},
                             error: (err: any) => { patchState(store, { error: err.error?.message || "Error while loading messages", loading: false }) }
                         })
                     )

@@ -55,6 +55,7 @@ export const authStore = signalStore(
         logout() {
             patchState(store, { currentUser: null });
             theme.setLightTheme();
+            localStorage.removeItem('user');
             document.body.classList.remove('dark-theme');
             router.navigate(["/"]);
         },

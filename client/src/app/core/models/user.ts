@@ -32,7 +32,7 @@ export interface UserSearchResponse{
 }
 
 export interface PhotoUpdateResponse {
-    photoUrl: string;
+    url: string;
 }
 
 export interface UserStatusRequest {
