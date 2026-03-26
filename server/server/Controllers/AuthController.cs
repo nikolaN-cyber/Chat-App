@@ -13,10 +13,12 @@ namespace server.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IEmailQueue _emailQueue;
-        public AuthController(IAuthService service, IEmailQueue emailQueue)
+        private readonly ILogger<AuthController> _logger;
+        public AuthController(IAuthService service, IEmailQueue emailQueue, ILogger<AuthController> logger)
         {
             _authService = service;
             _emailQueue = emailQueue;
+            _logger = logger;
         }
 
         [AllowAnonymous]
@@ -25,10 +27,6 @@ namespace server.Controllers
         {
             var result = await _authService.RegisterAsync(request, cancellationToken);
 
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
             try
             {
                 var emailBody = EmailTemplate.GetWelcomeTemplate(request.Username);
@@ -39,21 +37,17 @@ namespace server.Controllers
                 );
                 _emailQueue.QueueEmail(welcomeEmail);
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine($"Greška pri dodavanju mejla u red: {ex.Message}");
+                _logger.LogWarning("Email queue is currently not working.");
             }
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginData request, CancellationToken cancellationToken)
         {
             var result = await _authService.LoginAsync(request, cancellationToken);
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
             return Ok(result.Data);
         }
     }

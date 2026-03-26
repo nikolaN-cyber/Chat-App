@@ -25,15 +25,16 @@ namespace Core.Services
 
         public async Task<ApiResponse<bool>> RegisterAsync(RegisterData request, CancellationToken cancellationToken)
         {
-            var existingUser = await _context._users.AnyAsync(u => u.Email == request.Email || u.Username == request.Username, cancellationToken);
-            if (existingUser)
-            {
-                return ApiResponse<bool>.FailureResponse("User already exists");
-            }
             var confirmPasswordCheck = request.Password == request.ConfirmPassword ? true : false;
             if (!confirmPasswordCheck)
             {
-                return ApiResponse<bool>.FailureResponse("Passwords do not match");
+                throw new ArgumentException("Passwords do not match.");
+            }
+
+            var existingUser = await _context._users.AnyAsync(u => u.Email == request.Email || u.Username == request.Username, cancellationToken);
+            if (existingUser)
+            {
+                throw new ArgumentException("User with this email or username already exists.");
             }
             string hashedPassword = BCrypt.Net.BCrypt.EnhancedHashPassword(request.Password);
             var newUser = new User
@@ -55,7 +56,7 @@ namespace Core.Services
             var user = await _context._users.Include(u => u.UserStatus).FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
             if (user == null || !BCrypt.Net.BCrypt.EnhancedVerify(request.Password, user.Password))
             {
-                return ApiResponse<LoginResponse>.FailureResponse("Invalid credentials");
+                throw new ArgumentException("Invalid credentials");
             }
             var token = GenerateJwtToken(user);
             return ApiResponse<LoginResponse>.SuccessResponse(new LoginResponse(

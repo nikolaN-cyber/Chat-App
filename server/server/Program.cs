@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Prometheus;
+using Core.Handlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +27,10 @@ builder.Services.AddCors(options =>
                   .AllowCredentials();
         });
 });
+
+//Error handling services
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 //Database config
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -94,6 +100,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseExceptionHandler();
+
 app.UseCors("AllowAngularClient");
 
 app.UseAuthentication();
@@ -102,5 +110,8 @@ app.UseAuthorization();
 app.MapHub<ChatHub>("/hub");
 
 app.MapControllers();
+
+app.UseHttpMetrics();
+app.MapMetrics();
 
 app.Run();

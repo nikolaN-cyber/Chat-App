@@ -21,10 +21,8 @@ namespace Core.Services
 
         public async Task<ApiResponse<ConversationDetails>> GetConversation(int conversationId, CancellationToken cancellationToken)
         {
-            try
-            {
                 int currentUserId = _currentUserService.GetCurrentUserId();
-                if (currentUserId == 0) return ApiResponse<ConversationDetails>.FailureResponse("Unauthorized");
+                if (currentUserId == 0) throw new UnauthorizedAccessException("Unauthorized");
 
                 var response = await _context._conversation
                     .AsNoTracking()
@@ -44,27 +42,15 @@ namespace Core.Services
                     ))
                     .FirstOrDefaultAsync(cancellationToken);
 
-                if (response == null) return ApiResponse<ConversationDetails>.FailureResponse("Conversation does not exist");
+                if (response == null) throw new KeyNotFoundException("Conversation does not exist");
 
                 return ApiResponse<ConversationDetails>.SuccessResponse(response);
-            }
-            catch (OperationCanceledException)
-            {
-                Console.WriteLine($"Upit za konverzaciju {conversationId} je otkazan od strane klijenta.");
-                return ApiResponse<ConversationDetails>.FailureResponse("Request was cancelled by user.");
-            }
-            catch (Exception ex)
-            {
-                var detailedError = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
-                Console.WriteLine($"Kritična greška: {detailedError}");
-                return ApiResponse<ConversationDetails>.FailureResponse($"Server error: {ex.Message}");
-            }
         }
 
         public async Task<ApiResponse<ConversationResponse>> CreateConversation(CreateConversationData request, CancellationToken cancellationToken)
         {
             int currentUserId = _currentUserService.GetCurrentUserId();
-            if (currentUserId == 0) return ApiResponse<ConversationResponse>.FailureResponse("Unauthorized");
+            if (currentUserId == 0) throw new UnauthorizedAccessException("Unauthorized");
 
             var allParticipantIds = request.participantIds.Distinct().ToList();
             if (!allParticipantIds.Contains(currentUserId))
@@ -107,16 +93,9 @@ namespace Core.Services
                     JoinedAt = DateTime.UtcNow
                 }).ToList()
             };
-
-            try
-            {
-                _context._conversation.Add(newConversation);
-                await _context.SaveChangesAsync(cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<ConversationResponse>.FailureResponse($"Greška pri upisu u bazu: {ex.Message}");
-            }
+                
+            _context._conversation.Add(newConversation);
+            await _context.SaveChangesAsync(cancellationToken);        
 
             var participantData = await _context._users
                 .Where(u => allParticipantIds.Contains(u.Id))
@@ -139,10 +118,8 @@ namespace Core.Services
 
         public async Task<ApiResponse<List<ConversationResponse>>> GetUserConversationsAsync(CancellationToken cancellationToken)
         {
-            try
-            {
                 int currentUserId = _currentUserService.GetCurrentUserId();
-                if (currentUserId == 0) return ApiResponse<List<ConversationResponse>>.FailureResponse("Unauthorized");
+                if (currentUserId == 0) throw new UnauthorizedAccessException("Unauthorized");
 
                 var query = _context._conversation
                     .AsNoTracking()
@@ -173,12 +150,6 @@ namespace Core.Services
 
                 var conversations = await query.ToListAsync(cancellationToken);
                 return ApiResponse<List<ConversationResponse>>.SuccessResponse(conversations);
-            }
-            catch (Exception ex)
-            {
-                var innerMessage = ex.InnerException?.Message;
-                return ApiResponse<List<ConversationResponse>>.FailureResponse($"Greška: {ex.Message}. Detalji: {innerMessage}");
-            }
         }
 
         public async Task<ApiResponse<bool>> DeleteConversationAsync(int ConversationId, CancellationToken cancellationToken)
@@ -207,21 +178,21 @@ namespace Core.Services
             int currentUserId = _currentUserService.GetCurrentUserId();
             if (currentUserId == 0)
             {
-                return ApiResponse<bool>.FailureResponse("Unauthorized");
+                throw new UnauthorizedAccessException("Unauthorized");
             }
             var conversation = await _context._conversation.FirstOrDefaultAsync(c => c.Id == request.ConversationId, cancellationToken);
             if (conversation == null)
             {
-                return ApiResponse<bool>.FailureResponse("Conversation with this id does not exist");
+                throw new KeyNotFoundException("Conversation not found");
             }
             if (conversation.AdminId != currentUserId)
             {
-                return ApiResponse<bool>.FailureResponse("Unauthorized action");
+                throw new UnauthorizedAccessException("Only admin can remove members");
             }
             var participant = await _context._participations.FirstOrDefaultAsync(p => p.ConversationId == request.ConversationId && p.UserId == request.UserId, cancellationToken);
             if (participant == null)
             {
-                return ApiResponse<bool>.FailureResponse("User is not participating in this conversation");
+                throw new UnauthorizedAccessException("User is not participant of this conversation");
             }
             _context._participations.Remove(participant);
             await _context.SaveChangesAsync(cancellationToken);
@@ -232,6 +203,11 @@ namespace Core.Services
         {
             int currentUserId = _currentUserService.GetCurrentUserId();
 
+            if (currentUserId == 0)
+            {
+                throw new UnauthorizedAccessException("Unauthorized");
+            }
+
             var validation = await _context._conversation
                 .Where(c => c.Id == request.ConversationId)
                 .Select(c => new {
@@ -240,13 +216,13 @@ namespace Core.Services
                 })
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (validation == null) return ApiResponse<List<ParticipantNames>>.FailureResponse("Conversation not found");
-            if (!validation.IsAdmin) return ApiResponse<List<ParticipantNames>>.FailureResponse("Only admin can manage members");
+            if (validation == null) throw new KeyNotFoundException("Conversationn not found");
+            if (!validation.IsAdmin) throw new UnauthorizedAccessException("Only admin can add members");
 
             var newIdsToAdd = request.UserIds.Except(validation.ExistingIds).ToList();
 
             if (!newIdsToAdd.Any())
-                return ApiResponse<List<ParticipantNames>>.FailureResponse("All selected users are already members");
+                throw new ArgumentException("These users are already members");
 
             var participantsData = await _context._users
                 .Where(u => newIdsToAdd.Contains(u.Id))

@@ -7,7 +7,6 @@ using Core.DTOs.Message;
 using Core.Helpers;
 using Infrastructure.Contexts;
 using Core.DTOs.UserStatus;
-using Org.BouncyCastle.Bcpg.Sig;
 
 namespace Core.Services
 {
@@ -28,18 +27,18 @@ namespace Core.Services
             int currentUserId = _currentUserService.GetCurrentUserId();
             if (currentUserId == 0)
             {
-                return ApiResponse<UserResponse>.FailureResponse("Unauthorized");
+                throw new UnauthorizedAccessException("Unauthorized");
             }
             var userToEdit = await _context._users.FindAsync(currentUserId, cancellationToken);
             if (userToEdit == null)
             {
-                return ApiResponse<UserResponse>.FailureResponse("User with this Id: " + currentUserId + " does not exist");
+                throw new KeyNotFoundException("User not found");
             }
 
             if (userToEdit.Username != request.Username)
             {
                 bool exists = await _context._users.AnyAsync(u => u.Username == request.Username, cancellationToken);
-                if (exists) return ApiResponse<UserResponse>.FailureResponse("Username is already taken");
+                if (exists) throw new ArgumentException("Username already taken");
             }
 
             userToEdit.Username = request.Username;
@@ -73,17 +72,17 @@ namespace Core.Services
         public async Task<ApiResponse<MessageResponse>> SendMessageAsync(MessageData request, CancellationToken cancellationToken)
         {
             int currentUserId = _currentUserService.GetCurrentUserId();
-            if (currentUserId == 0) return ApiResponse<MessageResponse>.FailureResponse("Unauthorized");
+            if (currentUserId == 0) throw new UnauthorizedAccessException("Unauthorized");
 
             var conversation = await _context._conversation
                 .Include(c => c.Participants)
                 .ThenInclude(p => p.User)
                 .FirstOrDefaultAsync(c => c.Id == request.ConversationId, cancellationToken);
 
-            if (conversation == null) return ApiResponse<MessageResponse>.FailureResponse("Conversation does not exist");
+            if (conversation == null) throw new KeyNotFoundException("Conversation not found");
 
             if (!conversation.Participants.Any(p => p.UserId == currentUserId))
-                return ApiResponse<MessageResponse>.FailureResponse("Niste učesnik ove konverzacije");
+                throw new UnauthorizedAccessException("You are not part of this conversation");
 
             var sender = await _context._users.FirstAsync(u => u.Id == currentUserId, cancellationToken);
 
@@ -102,7 +101,7 @@ namespace Core.Services
 
             if (recipients == null)
             {
-                return ApiResponse<MessageResponse>.FailureResponse("Users to send, do not exist");
+                throw new ArgumentException("Reciepents do not exist");
             }
 
             foreach (var recipient in recipients)
@@ -137,7 +136,7 @@ namespace Core.Services
             int currentUserId = _currentUserService.GetCurrentUserId();
             if (currentUserId == 0)
             {
-                return ApiResponse<List<UserSummaryResponse>>.FailureResponse("Unauthorized");
+                throw new UnauthorizedAccessException("Unauthorized");
             }
             if (filter == "")
             {
@@ -160,18 +159,18 @@ namespace Core.Services
             int currentUserId = _currentUserService.GetCurrentUserId();
             if (currentUserId == 0)
             {
-                return ApiResponse<StatusResponse>.FailureResponse("Unauthorized");
+                throw new UnauthorizedAccessException("Unauthorized");
             }
 
             var validStatuses = new[] { "onvacation", "workingremotely" };
 
             if (!validStatuses.Contains(request.Status))
             {
-                return ApiResponse<StatusResponse>.FailureResponse("Invalid status");
+                throw new ArgumentException("Invalid user status");
             }
             if (request.ExpiresAt < DateTime.UtcNow)
             {
-                return ApiResponse<StatusResponse>.FailureResponse("Invalid expiration time");
+                throw new ArgumentException("Invalid date");
             }
 
             var existingStatus = await _context._userStatuses.FirstOrDefaultAsync(us => us.UserId == currentUserId, cancellationToken);
@@ -203,13 +202,13 @@ namespace Core.Services
             int currentUserId = _currentUserService.GetCurrentUserId();
             if (currentUserId == 0)
             {
-                return ApiResponse<StatusResponse>.FailureResponse("Unauthorized");
+                throw new UnauthorizedAccessException("Unauthorized");
             }
 
             var status = await _context._userStatuses.FirstOrDefaultAsync(us => us.UserId == currentUserId, cancellationToken);
             if (status == null)
             {
-                return ApiResponse<StatusResponse>.FailureResponse("Status does not exist");
+                throw new KeyNotFoundException("User status does not exist");
             }
 
             var newStatusResponse = new StatusResponse(status.Emoji, status.Status);
