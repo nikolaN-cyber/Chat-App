@@ -1,26 +1,33 @@
-﻿using Core.Interfaces;
+﻿using Core.DTOs.Auth;
+using Core.DTOs.Message;
+using Core.DTOs.UserStatus;
+using Core.Helpers;
+using Core.Interfaces;
 using Core.Types;
+using Domain.Entities;
+using Infrastructure.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Core.DTOs.Auth;
-using Domain.Entities;
-using Infrastructure.Contexts;
-using Core.DTOs.UserStatus;
 
 namespace Core.Services
 {
     public class AuthService : IAuthService
     {
         private readonly AppDbContext _context;
+        private readonly IEmailQueue _emailQueue;
         private readonly IConfiguration _config;
-        public AuthService(AppDbContext context, IConfiguration configuration)
+        private readonly ILogger<AuthService> _logger;
+        public AuthService(AppDbContext context, IEmailQueue emailQueue, IConfiguration configuration, ILogger<AuthService> logger)
         {
             _context = context;
+            _emailQueue = emailQueue;
             _config = configuration;
+            _logger = logger;
         }
 
         public async Task<ApiResponse<bool>> RegisterAsync(RegisterData request, CancellationToken cancellationToken)
@@ -47,6 +54,22 @@ namespace Core.Services
                 Password = hashedPassword
             };
             _context._users.Add(newUser);
+
+            try
+            {
+                var emailBody = EmailTemplate.GetWelcomeTemplate(request.Username);
+                var welcomeEmail = new EmailMessage(
+                    To: request.Email,
+                    Subject: "Welcome!",
+                    Body: emailBody
+                );
+                _emailQueue.QueueEmail(welcomeEmail);
+            }
+            catch
+            {
+                _logger.LogWarning("Email queue is currently not working.");
+            }
+
             await _context.SaveChangesAsync(cancellationToken);
             return ApiResponse<bool>.SuccessResponse(true);
         }

@@ -13,12 +13,10 @@ namespace server.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IEmailQueue _emailQueue;
-        private readonly ILogger<AuthController> _logger;
-        public AuthController(IAuthService service, IEmailQueue emailQueue, ILogger<AuthController> logger)
+        public AuthController(IAuthService service, IEmailQueue emailQueue)
         {
             _authService = service;
             _emailQueue = emailQueue;
-            _logger = logger;
         }
 
         [AllowAnonymous]
@@ -26,21 +24,6 @@ namespace server.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterData request, CancellationToken cancellationToken)
         {
             var result = await _authService.RegisterAsync(request, cancellationToken);
-
-            try
-            {
-                var emailBody = EmailTemplate.GetWelcomeTemplate(request.Username);
-                var welcomeEmail = new EmailMessage(
-                    To: request.Email,
-                    Subject: "Welcome!",
-                    Body: emailBody
-                );
-                _emailQueue.QueueEmail(welcomeEmail);
-            }
-            catch
-            {
-                _logger.LogWarning("Email queue is currently not working.");
-            }
             return Ok(result);
         }
 

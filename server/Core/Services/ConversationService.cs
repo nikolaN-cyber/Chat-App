@@ -58,6 +58,16 @@ namespace Core.Services
             if (!allParticipantIds.Contains(currentUserId))
                 allParticipantIds.Add(currentUserId);
 
+            var participantsFromDb = await _context._users
+                .Where(u => allParticipantIds.Contains(u.Id))
+                .Select(u => new { u.Id, u.Username, u.FirstName, u.LastName, u.PhotoUrl })
+                .ToListAsync(cancellationToken);
+
+            if (participantsFromDb.Count != allParticipantIds.Count)
+            {
+                throw new ArgumentException("One or more participants do not exist");
+            }
+
             bool isGroup = allParticipantIds.Count > 2 || !string.IsNullOrWhiteSpace(request.Title);
 
             if (!isGroup)
