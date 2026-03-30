@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Dockerfile" />
+  </Folder>
   <Folder Name="/Tests/">
     <Project Path="Tests.Unit/Tests.Unit.csproj" Id="379606d1-4fee-4fd0-afed-e8ca598bc188" />
   </Folder>

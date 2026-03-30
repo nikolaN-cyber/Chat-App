@@ -11,16 +11,16 @@ import { ChatOptions } from './features/chat-options/chat-options';
 import { Welcome } from './features/welcome/welcome';
 
 export const routes: Routes = [
-    { path: "", component: Login, canActivate: [GuestGuard] },
+    { path: "", component: Login, title: 'ChatApp - Login', canActivate: [GuestGuard] },
     {
         path: "home", component: Home, children: [
-            {path: '', component: Welcome},
-            { path: 'chat/:id', component: Chat },
-            { path: 'chat/:id/options', component: ChatOptions},
-            { path: 'my-profile', component: MyProfile },
-            { path: 'create-conversation', component: CreateConversation },
+            {path: '', title: 'ChatApp - Inbox', component: Welcome},
+            { path: 'chat/:id', title: 'ChatApp - Inbox', component: Chat },
+            { path: 'chat/:id/options', title: 'ChatApp - Options', component: ChatOptions},
+            { path: 'my-profile', title: 'ChatApp - MyProfile', component: MyProfile },
+            { path: 'create-conversation', title: 'ChatApp - Create Conversation', component: CreateConversation },
         ], canActivate: [AuthGuard]
     },
-    { path: 'register', component: Register, canActivate: [GuestGuard] },
+    { path: 'register', title: 'ChatApp - Register', component: Register, canActivate: [GuestGuard] },
     { path: '', redirectTo: 'home', pathMatch: 'full' }
 ];

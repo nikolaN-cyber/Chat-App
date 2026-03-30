@@ -42,9 +42,9 @@ export const chatStore = signalStore(
 
                 switchMap((conversationId) => {
                     console.log(conversationId);
-                     return conversationService.getConversation(conversationId).pipe(
+                    return conversationService.getConversation(conversationId).pipe(
                         tapResponse({
-                            next: (data) => { if (data) {patchState(store, { messages: data.messages, participants: data.participants, currentConversationId: data.id, adminId: data.adminId, loading: false, error: null }); }},
+                            next: (data) => { if (data) { patchState(store, { messages: data.messages, participants: data.participants, currentConversationId: data.id, adminId: data.adminId, loading: false, error: null }); } },
                             error: (err: any) => { patchState(store, { error: err.error?.message || "Error while loading messages", loading: false }) }
                         })
                     )
@@ -58,7 +58,16 @@ export const chatStore = signalStore(
                 switchMap((message) =>
                     userService.sendMessage(message).pipe(
                         tapResponse({
-                            next: (response) => { const messageFromServer = response; patchState(store, { loading: false, error: null }) },
+                            next: (response) => {
+                                if (!response) {
+                                    patchState(store, { loading: false });
+                                    return;
+                                }
+                                patchState(store, (state) => ({
+                                    loading: false,
+                                    error: null
+                                }))
+                            },
                             error: (err: any) => { patchState(store, { error: err.error?.message || "Error while loading a message" }) }
                         })
                     )

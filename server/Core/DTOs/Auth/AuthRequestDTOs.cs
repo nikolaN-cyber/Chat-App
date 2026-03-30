@@ -8,7 +8,7 @@ public record LoginData(
     string Username,
     [Required(ErrorMessage = "Password is required")]
     [MinLength(8, ErrorMessage = "Password must be minimum 8 characters long")]
-    string Password
+    string Password  
 );
 
 public record RegisterData(

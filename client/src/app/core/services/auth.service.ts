@@ -1,6 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable, inject } from "@angular/core";
-import { environment } from "../../../environments/environment.development";
+import { environment } from "../../../environments/environment";
 import { LoginResponse, UserLogin, UserRegister } from "../models/user";
 import { map } from "rxjs";
 import { ApiResponse } from "../models/api-response";

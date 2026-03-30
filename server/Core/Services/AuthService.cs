@@ -35,13 +35,13 @@ namespace Core.Services
             var confirmPasswordCheck = request.Password == request.ConfirmPassword ? true : false;
             if (!confirmPasswordCheck)
             {
-                throw new ArgumentException("Passwords do not match.");
+                throw new ArgumentException("Passwords do not match");
             }
 
             var existingUser = await _context._users.AnyAsync(u => u.Email == request.Email || u.Username == request.Username, cancellationToken);
             if (existingUser)
             {
-                throw new ArgumentException("User with this email or username already exists.");
+                throw new ArgumentException("User with this email or username already exists");
             }
             string hashedPassword = BCrypt.Net.BCrypt.EnhancedHashPassword(request.Password);
             var newUser = new User
@@ -101,7 +101,7 @@ namespace Core.Services
                 new Claim("id", user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Username)
             }),
-                Expires = DateTime.UtcNow.AddDays(7),
+                Expires = DateTime.UtcNow.AddHours(6),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 

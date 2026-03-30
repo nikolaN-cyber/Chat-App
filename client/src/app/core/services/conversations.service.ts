@@ -1,6 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { environment } from "../../../environments/environment.development";
+import { environment } from "../../../environments/environment";
 import { AddUsersRequest, ConversationDetails, ConversationResponse, CreateConversationData, ParticipantNames } from "../models/conversation";
 import { map } from "rxjs";
 import { ApiResponse } from "../models/api-response"; // Proveri putanju do interfejsa

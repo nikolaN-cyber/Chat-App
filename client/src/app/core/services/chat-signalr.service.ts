@@ -2,6 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import * as signalR from "@microsoft/signalr";
 import { chatStore } from "../../shared/store/chat.store";
 import { authStore } from "../../shared/store/auth.store";
+import { environment } from "../../../environments/environment";
 
 @Injectable(
     { providedIn: 'root' }
@@ -17,7 +18,7 @@ export class ChatSignalRService {
             return;
         }
         this.hubConnection = new signalR.HubConnectionBuilder()
-            .withUrl('https://localhost:7207/hub', {
+            .withUrl(environment.signalRUrl, {
                 accessTokenFactory: () => token,
                 skipNegotiation: true,
                 transport: signalR.HttpTransportType.WebSockets
@@ -31,11 +32,7 @@ export class ChatSignalRService {
             .catch(err => console.error('SignalR Error: ', err));
 
         this.hubConnection.on('ReceiveMessage', (message) => {
-            const myId = this.authStore.currentUser()?.id;
-
-            if (message.senderId !== myId) {
-                this.chatStore.addMessage(message);
-            }
+            this.chatStore.addMessage(message);
         });
 
         this.hubConnection.on('UserStatusChanged', (username, isOnline) => {

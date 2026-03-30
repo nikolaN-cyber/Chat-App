@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { environment } from "../../../environments/environment.development";
+import { environment } from "../../../environments/environment";
 import { Message, MessageResponse } from "../models/message";
 import { PhotoUpdateResponse, UserSearchResponse, UserStatusRequest, UserStatusResponse } from "../models/user";
 import { map } from "rxjs";
