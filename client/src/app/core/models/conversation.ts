@@ -36,3 +36,8 @@ export interface ParticipantNames {
     userId: number;
     photoUrl: string;
 }
+
+export interface SearchConversationRequest{
+    conversationId: number;
+    filter: string;
+}

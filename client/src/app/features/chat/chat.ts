@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, OnDestroy, signal, untracked, ViewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, OnDestroy, OnInit, signal, untracked, ViewChild } from '@angular/core';
 import { conversationsStore } from '../../shared/store/conversations.store';
 import { chatStore } from '../../shared/store/chat.store';
 import { authStore } from '../../shared/store/auth.store';
@@ -12,95 +12,100 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
+import { map, Subscription } from 'rxjs';
 import { ChatSignalRService } from '../../core/services/chat-signalr.service';
 import { environment } from '../../../environments/environment.development';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { FileService } from '../../core/services/file.service';
+import { SearchConversationRequest } from '../../core/models/conversation';
 
 @Component({
   selector: 'app-chat',
+  standalone: true,
   imports: [
-    MatButtonModule,
-    MatListModule,
-    MatProgressSpinnerModule,
-    DatePipe,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    CommonModule,
-    ReactiveFormsModule,
-    RouterLink,
-    MatSnackBarModule
+    MatButtonModule, MatListModule, MatProgressSpinnerModule, DatePipe,
+    MatFormFieldModule, MatIconModule, MatInputModule, CommonModule,
+    ReactiveFormsModule, RouterLink, MatSnackBarModule
   ],
   templateUrl: './chat.html',
   styleUrl: './chat.css',
 })
-export class Chat implements OnDestroy {
-
+export class Chat implements OnInit, OnDestroy {
   selectedConvTitle = signal('');
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
 
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
+  private snackBar = inject(MatSnackBar);
+  private readonly fileService = inject(FileService);
+  private signalrService = inject(ChatSignalRService);
+
+  readonly chatStore = inject(chatStore);
+  readonly convStore = inject(conversationsStore);
+  readonly authStore = inject(authStore);
 
   public imageBaseUrl = environment.imageBaseUrl;
+  private routeSub?: Subscription;
 
   routeId = toSignal(
-    this.route.paramMap.pipe(
-      map(params => Number(params.get('id')))
-    )
+    this.route.paramMap.pipe(map(params => Number(params.get('id'))))
   );
 
   sendMessageForm = this.fb.nonNullable.group({
     content: ['', [Validators.required, Validators.maxLength(500)]],
   });
 
-  private snackBar = inject(MatSnackBar);
-  private readonly fileService = inject(FileService);
-  readonly chatStore = inject(chatStore);
-  readonly convStore = inject(conversationsStore);
-  readonly authStore = inject(authStore);
-  private signalrService = inject(ChatSignalRService);
-
   isGroup = computed(() => {
     const currentId = this.routeId();
-    const conversations = this.convStore.conversations;
-    return !!conversations()?.find(c => c.id === currentId)?.isGroup;
-  })
+    return !!this.convStore.conversations()?.find(c => c.id === currentId)?.isGroup;
+  });
+
+  messagesToDisplay = computed(() => {
+    const isSearching = this.chatStore.isSearching();
+    const searchResults = this.chatStore.searchResult();
+    const allMessages = this.chatStore.messages();
+
+    return isSearching ? searchResults : allMessages;
+  });
 
   constructor() {
-
-    effect(() => {
-
-      const currentId = this.routeId();
-      if (currentId === undefined || currentId === null) return;
-
-      const selectedConv = this.convStore.conversations()?.find(c => c.id === currentId);
-      this.selectedConvTitle.set(selectedConv?.title || "Private chat");
-
-      untracked(() => {
-        if (this.chatStore.currentConversationId() !== currentId) {
-          this.chatStore.loadChat(currentId);
-        }
-        this.signalrService.joinConversation(currentId);
-      });
-    });
-
     effect(() => {
       const messages = this.chatStore.messages();
-      if (messages.length > 0) {
+      const searchResults = this.chatStore.searchResult();
+      if (messages.length > 0 || searchResults.length > 0) {
         untracked(() => {
-          setTimeout(() => this.scrollToBottom(), 100);
+          requestAnimationFrame(() => this.scrollToBottom());
         });
       }
     });
   }
 
+  ngOnInit(): void {
+    this.routeSub = this.route.paramMap.subscribe(params => {
+      const id = Number(params.get('id'));
+      if (id) {
+        this.initializeChat(id);
+      }
+    });
+  }
+
+  private async initializeChat(id: number) {
+    this.chatStore.clearIsSearching();
+    this.chatStore.loadChat(id);
+    const selectedConv = this.convStore.conversations()?.find(c => c.id === id);
+    this.selectedConvTitle.set(selectedConv?.title || "Private chat");
+    this.signalrService.startConnection();
+    await this.signalrService.joinConversation(id);
+    setTimeout(() => this.scrollToBottom(), 500);
+  }
+
   private scrollToBottom() {
     if (this.scrollContainer) {
       const el = this.scrollContainer.nativeElement;
-      el.scrollTop = el.scrollHeight;
+      el.scrollTo({
+        top: el.scrollHeight,
+        behavior: 'smooth'
+      });
     }
   }
 
@@ -118,11 +123,8 @@ export class Chat implements OnDestroy {
 
   onFileSelected(event: any) {
     const file: File = event.target.files[0];
-    if (!file) return;
     const currentConvId = this.routeId();
-    if (!file || currentConvId === undefined) {
-      return;
-    }
+    if (!file || !currentConvId) return;
 
     this.fileService.uploadFile(file).subscribe(fileData => {
       const messagePayload = {
@@ -140,13 +142,28 @@ export class Chat implements OnDestroy {
   }
 
   getCleanUrl(fileUrl: string): string {
-  if (!fileUrl) return '';
-  
-  const base = this.imageBaseUrl.endsWith('/') ? this.imageBaseUrl.slice(0, -1) : this.imageBaseUrl;
-  const path = fileUrl.startsWith('/') ? fileUrl : '/' + fileUrl;
-  
-  return base + path;
-}
+    if (!fileUrl) return '';
+    const base = this.imageBaseUrl.endsWith('/') ? this.imageBaseUrl.slice(0, -1) : this.imageBaseUrl;
+    const path = fileUrl.startsWith('/') ? fileUrl : '/' + fileUrl;
+    return base + path;
+  }
+
+  searchMessages(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    const currentConvId = this.routeId();
+    if (!currentConvId) return;
+    if (!value || value.trim().length === 0) {
+      this.chatStore.clearIsSearching();
+      return;
+    }
+    if (value.trim().length >= 2) {
+      const payload: SearchConversationRequest = {
+        conversationId: currentConvId,
+        filter: value
+      };
+      this.chatStore.searchConversation(payload);
+    }
+  }
 
   deleteChat() {
     const currentConvId = this.routeId();
@@ -155,9 +172,8 @@ export class Chat implements OnDestroy {
     }
   }
 
-  
-
   ngOnDestroy(): void {
+    this.routeSub?.unsubscribe();
     const currentId = this.routeId();
     if (currentId) {
       this.signalrService.leaveConversation(currentId);

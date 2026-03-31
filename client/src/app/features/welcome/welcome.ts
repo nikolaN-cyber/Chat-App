@@ -37,7 +37,6 @@ export class Welcome {
   onSearchChange(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.userStore.updateFilter(value);
-    console.log(value);
   }
 
   openPrivateChat(user: ParticipantNames) {

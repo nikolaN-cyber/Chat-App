@@ -1,10 +1,10 @@
 import { patchState, signalStore, withComputed, withMethods, withState } from "@ngrx/signals";
-import { ParticipantNames } from "../../core/models/conversation";
+import { ParticipantNames, SearchConversationRequest } from "../../core/models/conversation";
 import { MessageResponse } from "../../core/models/message";
 import { ConversationService } from "../../core/services/conversations.service";
-import { computed, inject } from "@angular/core";
+import { computed, inject, untracked } from "@angular/core";
 import { rxMethod } from "@ngrx/signals/rxjs-interop";
-import { EMPTY, pipe, switchMap, tap } from "rxjs";
+import { debounceTime, distinctUntilChanged, EMPTY, pipe, switchMap, tap } from "rxjs";
 import { tapResponse } from "@ngrx/operators";
 import { Message } from "../../core/models/message";
 import { UserService } from "../../core/services/user.service";
@@ -15,6 +15,8 @@ export const chatStore = signalStore(
     withState({
         messages: [] as MessageResponse[],
         participants: [] as ParticipantNames[],
+        searchResult: [] as MessageResponse[],
+        isSearching: false as boolean,
         currentConversationId: null as number | null,
         adminId: null as number | null,
         lastAdded: null as string | null,
@@ -54,21 +56,19 @@ export const chatStore = signalStore(
         ),
         sendMessage: rxMethod<Message>(
             pipe(
-                tap(() => patchState(store, { loading: true })),
                 switchMap((message) =>
                     userService.sendMessage(message).pipe(
                         tapResponse({
                             next: (response) => {
-                                if (!response) {
-                                    patchState(store, { loading: false });
-                                    return;
+                                if (response) {
+                                    patchState(store, {
+                                        loading: false
+                                    });
                                 }
-                                patchState(store, (state) => ({
-                                    loading: false,
-                                    error: null
-                                }))
                             },
-                            error: (err: any) => { patchState(store, { error: err.error?.message || "Error while loading a message" }) }
+                            error: (err: any) => {
+                                patchState(store, { loading: false, error: err.error?.message });
+                            }
                         })
                     )
                 )
@@ -125,10 +125,41 @@ export const chatStore = signalStore(
                 })
             )
         ),
+        searchConversation: rxMethod<SearchConversationRequest>(
+            pipe(
+                switchMap((payload) => {
+                    // Ako je filter prazan, odmah prekini i očisti sve
+                    if (!payload.filter || payload.filter.trim().length === 0) {
+                        patchState(store, { isSearching: false, searchResult: [] });
+                        return EMPTY;
+                    }
+                    patchState(store, { isSearching: true, loading: true });
+                    return conversationService.searchConversation(payload).pipe(
+                        tapResponse({
+                            next: (response) => {
+                                untracked(() => {
+                                    if (store.isSearching()) {
+                                        patchState(store, {
+                                            searchResult: response,
+                                            loading: false
+                                        });
+                                    }
+                                });
+                            },
+                            error: (err) => patchState(store, { loading: false })
+                        })
+                    );
+                })
+            )
+        ),
         addMessage(newMessage: any) {
+            console.log(newMessage);
             patchState(store, (state) => ({
                 messages: [...state.messages, newMessage]
             }));
+        },
+        clearIsSearching() {
+            patchState(store, { isSearching: false, searchResult: [] });
         }
     }))
 )

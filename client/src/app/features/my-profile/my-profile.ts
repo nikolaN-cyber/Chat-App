@@ -8,7 +8,6 @@ import { userStatusStore } from '../../shared/store/user-status.store';
 import { MatSelectModule } from '@angular/material/select';
 import { UserStatusRequest } from '../../core/models/user';
 import { MatMenuModule } from '@angular/material/menu';
-import { DatePipe } from '@angular/common';
 import { userStore } from '../../shared/store/user.store';
 
 @Component({
@@ -19,7 +18,6 @@ import { userStore } from '../../shared/store/user.store';
     MatIconModule,
     MatSelectModule,
     MatMenuModule,
-    DatePipe
   ],
   templateUrl: './my-profile.html',
   styleUrl: './my-profile.css',
@@ -55,21 +53,17 @@ export class MyProfile {
   }
 
   onStatusChange(option: any) {
-    let expiry: string;
-    if (option.status === 'onvacation') {
-      expiry = this.getEndOfDay();
-    } else {
-      expiry = this.getEndOfWorkDay();
-    }
     const request: UserStatusRequest = {
       emoji: option.emoji,
       status: option.status,
-      expiresAt: expiry
+      expiresAt: option.status === 'onvacation' ? this.getEndOfDay() : this.getEndOfWorkDay()
     };
+
     this.userStatusStore.updateStatus(request);
   }
 
-  formatStatusLabel(status: string): string {
+  formatStatusLabel(status: string | undefined | null): string {
+    if (!status || status === 'No status set') return 'No status active';
     if (status === 'onvacation') return 'On Vacation';
     if (status === 'workingremotely') return 'Working Remotely';
     return status;
@@ -80,13 +74,22 @@ export class MyProfile {
 
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      console.log('Fajl izabran:', file.name, file.size, file.type); // <--- DEBUG 1
+      console.log('Fajl izabran:', file.name, file.size, file.type);
 
       this.userStore.updatePhoto(file);
       input.value = '';
     } else {
       console.log('Nijedan fajl nije izabran.');
     }
+  }
+
+  clearStatus() {
+    const clearRequest: UserStatusRequest = {
+      emoji: null,
+      status: null,
+      expiresAt: null
+    };
+    this.userStatusStore.updateStatus(clearRequest);
   }
 }
 

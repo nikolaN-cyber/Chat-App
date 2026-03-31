@@ -1,9 +1,10 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { environment } from "../../../environments/environment";
-import { AddUsersRequest, ConversationDetails, ConversationResponse, CreateConversationData, ParticipantNames } from "../models/conversation";
+import { AddUsersRequest, ConversationDetails, ConversationResponse, CreateConversationData, ParticipantNames, SearchConversationRequest } from "../models/conversation";
 import { map } from "rxjs";
 import { ApiResponse } from "../models/api-response"; // Proveri putanju do interfejsa
+import { MessageResponse } from "../models/message";
 
 @Injectable({
     providedIn: 'root'
@@ -44,6 +45,12 @@ export class ConversationService {
 
     addUsers(data: AddUsersRequest) {
         return this.http.post<ApiResponse<ParticipantNames[]>>(`${this.apiUrl}/add-users`, data).pipe(
+            map(res => res.data ?? [])
+        );
+    }
+
+    searchConversation(data: SearchConversationRequest){
+        return this.http.post<ApiResponse<MessageResponse[]>>(`${this.apiUrl}/search-conversation`, data).pipe(
             map(res => res.data ?? [])
         );
     }

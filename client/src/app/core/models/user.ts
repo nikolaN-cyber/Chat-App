@@ -36,12 +36,12 @@ export interface PhotoUpdateResponse {
 }
 
 export interface UserStatusRequest {
-    emoji: string;
-    status: string;
-    expiresAt: string;
+    emoji: string | null;
+    status: string | null;
+    expiresAt: string | null;
 }
 
 export interface UserStatusResponse {
-    emoji: string;
-    status: string;
+    emoji: string | null;
+    status: string | null;
 }

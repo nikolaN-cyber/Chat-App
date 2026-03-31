@@ -161,43 +161,52 @@ namespace Core.Services
         public async Task<ApiResponse<StatusResponse>> UpdateUserStatusAsync(AddStatus request, CancellationToken cancellationToken)
         {
             int currentUserId = _currentUserService.GetCurrentUserId();
-            if (currentUserId == 0)
+            if (currentUserId == 0) throw new UnauthorizedAccessException("Unauthorized");
+
+            var existingStatus = await _context._userStatuses
+                .FirstOrDefaultAsync(us => us.UserId == currentUserId, cancellationToken);
+
+            if (string.IsNullOrEmpty(request.Status))
             {
-                throw new UnauthorizedAccessException("Unauthorized");
+                if (existingStatus != null)
+                {
+                    _context._userStatuses.Remove(existingStatus);
+                    await _context.SaveChangesAsync(cancellationToken);
+                }
+                return ApiResponse<StatusResponse>.SuccessResponse(null);
             }
 
             var validStatuses = new[] { "onvacation", "workingremotely" };
-
             if (!validStatuses.Contains(request.Status))
             {
                 throw new ArgumentException("Invalid user status");
             }
-            if (request.ExpiresAt < DateTime.UtcNow)
-            {
-                throw new ArgumentException("Invalid date");
-            }
 
-            var existingStatus = await _context._userStatuses.FirstOrDefaultAsync(us => us.UserId == currentUserId, cancellationToken);
+            if (!request.ExpiresAt.HasValue || request.ExpiresAt.Value < DateTime.UtcNow)
+            {
+                throw new ArgumentException("Invalid or expired date");
+            }
 
             if (existingStatus != null)
             {
-                existingStatus.Emoji = request.Emoji;
+                existingStatus.Emoji = request.Emoji!;
                 existingStatus.Status = request.Status;
-                existingStatus.ExpiresAt = request.ExpiresAt;
+                existingStatus.ExpiresAt = request.ExpiresAt.Value;
                 _context._userStatuses.Update(existingStatus);
-            } else
+            }
+            else
             {
                 var newStatus = new UserStatus
                 {
-                    Emoji = request.Emoji,
+                    Emoji = request.Emoji!,
                     Status = request.Status,
-                    ExpiresAt = request.ExpiresAt,
+                    ExpiresAt = request.ExpiresAt.Value,
                     UserId = currentUserId,
                 };
                 _context._userStatuses.Add(newStatus);
             }
-            await _context.SaveChangesAsync(cancellationToken);
 
+            await _context.SaveChangesAsync(cancellationToken);
             return ApiResponse<StatusResponse>.SuccessResponse(new StatusResponse(request.Emoji, request.Status));
         }
 
@@ -212,7 +221,7 @@ namespace Core.Services
             var status = await _context._userStatuses.FirstOrDefaultAsync(us => us.UserId == currentUserId, cancellationToken);
             if (status == null)
             {
-                throw new KeyNotFoundException("User status does not exist");
+                return ApiResponse<StatusResponse>.SuccessResponse(null);
             }
 
             var newStatusResponse = new StatusResponse(status.Emoji, status.Status);

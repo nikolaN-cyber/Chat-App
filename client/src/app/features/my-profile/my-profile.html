@@ -56,7 +56,9 @@
         <div class="detail-item d-flex align-items-center mb-3">
           <div class="detail-icon-bg me-3">
             <mat-icon color="primary">
-              {{ userStatusStore.currentStatus()?.emoji || 'sentiment_satisfied' }}
+              @if (userStatusStore.currentStatus()?.emoji === 'palm-tree') { flight }
+              @else if (userStatusStore.currentStatus()?.emoji === 'house') { house }
+              @else { sentiment_satisfied }
             </mat-icon>
           </div>
           <div class="d-flex flex-column">
@@ -65,7 +67,7 @@
               @if (userStatusStore.loading()) {
               <span class="text-muted small">Updating...</span>
               } @else {
-              {{ userStatusStore.currentStatus()?.status || 'No status set' }}
+              {{ formatStatusLabel(userStatusStore.currentStatus()?.status ?? 'No status set') }}
               }
             </span>
           </div>
@@ -89,9 +91,13 @@
         <mat-icon>house</mat-icon>
         }
         <span>{{ formatStatusLabel(option.status) }}</span>
-        <small class="text-muted ms-2">until {{ option.expiresAt | date:'HH:mm' }}</small>
       </button>
       }
+      <hr>
+      <button mat-menu-item (click)="clearStatus()">
+        <mat-icon>block</mat-icon>
+        <span>Clear Status</span>
+      </button>
     </mat-menu>
   </mat-card>
 </div>

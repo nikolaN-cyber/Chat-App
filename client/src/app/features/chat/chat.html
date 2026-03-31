@@ -2,20 +2,26 @@
   <header class="chat-header p-3 border-bottom d-flex align-items-center bg-white justify-content-between">
     <div class="d-flex gap-2 align-items-center">
       @if (isGroup()) {
-      <div class="group-icon-circle shadow-sm">
-        <mat-icon>groups</mat-icon>
-      </div>
+        <div class="group-icon-circle shadow-sm">
+          <mat-icon>groups</mat-icon>
+        </div>
       } @else {
-      @let otherUser = chatStore.otherUser();
-      @if (otherUser?.photoUrl) {
-      <img [src]="imageBaseUrl + otherUser?.photoUrl" class="msg-picture shadow-sm">
-      } @else {
-      <div class="user-icon-circle shadow-sm">
-        <mat-icon>person</mat-icon>
-      </div>
-      }
+        @let otherUser = chatStore.otherUser();
+        @if (otherUser?.photoUrl) {
+          <img [src]="imageBaseUrl + otherUser?.photoUrl" class="msg-picture shadow-sm">
+        } @else {
+          <div class="user-icon-circle shadow-sm">
+            <mat-icon>person</mat-icon>
+          </div>
+        }
       }
       <h6 class="chat-header-title m-0 fw-bold">{{ selectedConvTitle() }}</h6>
+    </div>
+
+    <div class="search-container d-flex align-items-center bg-light rounded-pill px-3 py-1 border shadow-sm">
+      <mat-icon class="text-muted me-2" style="font-size: 20px; width: 20px; height: 20px;">search</mat-icon>
+      <input class="search-input border-0 bg-transparent w-100" placeholder="Search messages..."
+        (input)="searchMessages($event)" style="outline: none; font-size: 0.9rem;">
     </div>
 
     <div class="d-flex gap-2">
@@ -31,50 +37,51 @@
 
   <div #scrollContainer class="messages-container flex-grow-1 overflow-auto p-3">
     @if (chatStore.loading()) {
-    <div class="d-flex justify-content-center p-5">
-      <mat-spinner diameter="40"></mat-spinner>
-    </div>
-    } @else {
-    @for (msg of chatStore.messages(); track msg.createdAt) {
-    @let isMe = msg.authorUsername === authStore.currentUser()?.username;
-
-    <div class="message-row d-flex mb-3 w-100" [class.justify-content-end]="isMe">
-      <div class="message-bubble p-2 px-3 shadow-sm" [class.my-message]="isMe" [class.other-message]="!isMe"> @if
-        (msg.fileUrl && msg.fileType.startsWith('image/')) {
-        <div class="message-image-container mb-2">
-          <img [src]="imageBaseUrl + msg.fileUrl" class="img-fluid rounded chat-msg-img"
-            style="cursor: pointer; max-height: 300px;" (click)="openFullImage(msg.fileUrl)">
-        </div>
-        }
-
-        @else if (msg.fileUrl) {
-        <div class="file-attachment-box d-flex align-items-center gap-3 p-2 mb-2 border rounded bg-light shadow-sm">
-          <div class="file-icon">
-            <mat-icon color="primary">insert_drive_file</mat-icon>
-          </div>
-          <div class="file-info flex-grow-1 overflow-hidden">
-            <p class="m-0 small text-truncate fw-bold">Document attached</p>
-            <a [href]="getCleanUrl(msg.fileUrl)" target="_blank" class="btn btn-sm btn-link p-0 text-decoration-none"
-              download>
-              Download File
-            </a>
-          </div>
-        </div>
-        }
-
-        @if (msg.content) {
-        <div class="message-content text-break">{{ msg.content }}</div>
-        }
-
-        <div class="message-time text-end mt-1" style="font-size: 0.7rem; opacity: 0.8;">
-          {{ msg.createdAt | date:'HH:mm' }}
-        </div>
+      <div class="d-flex justify-content-center p-5">
+        <mat-spinner diameter="40"></mat-spinner>
       </div>
-    </div> } @empty {
-    <div class="d-flex justify-content-center align-items-center h-100">
-      <p>There are no messages. Start chatting!</p>
-    </div>
-    }
+    } @else {
+      
+      @for (msg of messagesToDisplay(); track msg.createdAt) {
+        @let isMe = msg.authorUsername === authStore.currentUser()?.username;
+
+        <div class="message-row d-flex mb-3 w-100" [class.justify-content-end]="isMe">
+          <div class="message-bubble p-2 px-3 shadow-sm" [class.my-message]="isMe" [class.other-message]="!isMe">
+            
+            @if (msg.fileUrl && msg.fileType?.startsWith('image/')) {
+              <div class="message-image-container mb-2">
+                <img [src]="imageBaseUrl + msg.fileUrl" class="img-fluid rounded chat-msg-img"
+                  style="cursor: pointer; max-height: 300px;" (click)="openFullImage(msg.fileUrl)">
+              </div>
+            } @else if (msg.fileUrl) {
+              <div class="file-attachment-box d-flex align-items-center gap-3 p-2 mb-2 border rounded bg-light shadow-sm">
+                <div class="file-icon">
+                  <mat-icon color="primary">insert_drive_file</mat-icon>
+                </div>
+                <div class="file-info flex-grow-1 overflow-hidden">
+                  <p class="m-0 small text-truncate fw-bold">Document attached</p>
+                  <a [href]="getCleanUrl(msg.fileUrl)" target="_blank" class="btn btn-sm btn-link p-0 text-decoration-none"
+                    download>
+                    View File
+                  </a>
+                </div>
+              </div>
+            }
+
+            @if (msg.content) {
+              <div class="message-content text-break">{{ msg.content }}</div>
+            }
+
+            <div class="message-time text-end mt-1" style="font-size: 0.7rem; opacity: 0.8;">
+              {{ msg.createdAt | date:'HH:mm' }}
+            </div>
+          </div>
+        </div>
+      } @empty {
+        <div class="d-flex justify-content-center align-items-center h-100">
+          <p>{{ chatStore.isSearching() ? 'No messages match your search' : 'There are no messages in this conversation yet' }}</p>
+        </div>
+      }
     }
   </div>
 
@@ -82,13 +89,10 @@
     <form [formGroup]="sendMessageForm" (ngSubmit)="onSubmit()">
       <div class="d-flex gap-2 align-items-center w-100">
         <input type="file" #fileInput style="display: none" (change)="onFileSelected($event)" accept="*/*">
-
         <button type="button" mat-icon-button (click)="fileInput.click()" title="Attach file">
           <mat-icon>attach_file</mat-icon>
         </button>
-
         <input formControlName="content" placeholder="Send a message..." type="text" class="chat-input flex-grow-1">
-
         <button mat-fab color="primary" type="submit"
           [disabled]="sendMessageForm.invalid && !sendMessageForm.value.content">
           <mat-icon>send</mat-icon>

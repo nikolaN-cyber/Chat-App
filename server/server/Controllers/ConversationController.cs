@@ -67,5 +67,13 @@ namespace server.Controllers
             var response = await _conversationService.AddUserAsync(request, cancellationToken);
             return Ok(response);
         }
+
+        [Authorize]
+        [HttpPost("search-conversation")]
+        public async Task<IActionResult> SearchConversation([FromBody] SearchConversationRequest request, CancellationToken cancellationToken)
+        {
+            var response = await _conversationService.SearchConversation(request, cancellationToken);
+            return Ok(response);
+        }
     }
 }

@@ -34,7 +34,11 @@
 
                         @if (user.status) {
                         <div class="status-badge d-flex align-items-center gap-1" [title]="user.status.status">
-                            <mat-icon class="status-icon-mini">{{ getStatusIcon(user.status.emoji) }}</mat-icon>
+                            @if (user.status.emoji){
+                                <mat-icon class="status-icon-mini">{{ getStatusIcon(user.status.emoji) }}</mat-icon>
+                            } @else {
+                                <mat-icon class="status-icon-min">mood</mat-icon>
+                            }
                             <span class="status-label">{{ user.status.status }}</span>
                         </div>
                         }

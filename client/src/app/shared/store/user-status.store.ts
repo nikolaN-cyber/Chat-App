@@ -7,7 +7,7 @@ import { inject } from "@angular/core";
 import { tapResponse } from "@ngrx/operators";
 
 export const userStatusStore = signalStore(
-    {providedIn: 'root'},
+    { providedIn: 'root' },
     withState({
         currentStatus: null as UserStatusResponse | null,
         loading: false,
@@ -16,25 +16,27 @@ export const userStatusStore = signalStore(
     withMethods((store, userService = inject(UserService)) => ({
         updateStatus: rxMethod<UserStatusRequest>(
             pipe(
-                tap(() => patchState(store, {loading: true})),
-                switchMap((request) => 
-                    userService.updateStatus(request).pipe(
+                tap(() => patchState(store, { loading: true })),
+                switchMap((request) => {
+                    const payload = request ?? { emoji: null, status: null, expiresAt: null };
+                    return userService.updateStatus(payload).pipe(
                         tapResponse({
-                            next: (response) => { patchState(store, {currentStatus: response, loading: false, error: null}) },
-                            error: (err: any) => { patchState(store, {loading: false, error: err.error?.message}) }
+                            next: () => { patchState(store, { currentStatus: payload, loading: false, error: null }) },
+                            error: (err: any) => { patchState(store, { loading: false, error: err.error?.message }) }
                         })
                     )
+                }
                 )
             )
         ),
         getStatus: rxMethod<void>(
             pipe(
-                tap(() => patchState(store, {loading: true})),
-                switchMap(() => 
+                tap(() => patchState(store, { loading: true })),
+                switchMap(() =>
                     userService.getStatus().pipe(
                         tapResponse({
-                            next: (response) => { patchState(store, {currentStatus: response, loading: false, error: null}) },
-                            error: (err: any) => { patchState(store, {loading: false, error: err.error?.message}) }
+                            next: (response) => { patchState(store, { currentStatus: response, loading: false, error: null }) },
+                            error: (err: any) => { patchState(store, { loading: false, error: err.error?.message }) }
                         })
                     )
                 )

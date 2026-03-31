@@ -254,5 +254,30 @@ namespace Core.Services
 
             return ApiResponse<List<ParticipantNames>>.SuccessResponse(participantsData);
         }
+
+        public async Task<ApiResponse<List<MessageResponse>>> SearchConversation(SearchConversationRequest request, CancellationToken cancellationToken)
+        {
+            int currentUserId = _currentUserService.GetCurrentUserId();
+
+            if (currentUserId == 0)
+            {
+                throw new UnauthorizedAccessException("Unauthorized");
+            }
+            if (request.Filter == "")
+            {
+                return ApiResponse<List<MessageResponse>>.SuccessResponse(new List<MessageResponse>());
+            }
+
+            var messages = await _context._messages.Where(m => m.ConversationId == request.ConversationId && m.Content.ToLower().Contains(request.Filter.ToLower()))
+                     .OrderByDescending(m => m.CreatedAt).Select(m => new MessageResponse(
+                                m.Author != null ? (m.Author.Username ?? "Unknown") : "Unknown",
+                                m.Content,
+                                m.CreatedAt,
+                                m.Author.PhotoUrl,
+                                m.FileUrl,
+                                m.FileType)).ToListAsync(cancellationToken);
+
+            return ApiResponse<List<MessageResponse>>.SuccessResponse(messages);          
+        }
     }
 }
