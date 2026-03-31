@@ -92,6 +92,7 @@ export class Chat implements OnInit, OnDestroy {
   private async initializeChat(id: number) {
     this.chatStore.clearIsSearching();
     this.chatStore.loadChat(id);
+    this.convStore.resetUnreadCount(id);
     const selectedConv = this.convStore.conversations()?.find(c => c.id === id);
     this.selectedConvTitle.set(selectedConv?.title || "Private chat");
     this.signalrService.startConnection();

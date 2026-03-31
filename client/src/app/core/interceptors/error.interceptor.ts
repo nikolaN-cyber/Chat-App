@@ -12,7 +12,6 @@ export const ErrorInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req).pipe(
         catchError((error: HttpErrorResponse) => {
             let errorMessage = "Unexpected error";
-
             if (error.status === 400 && error.error?.errors) {
                 const validationErrors = error.error.errors;
                 const messages: string[] = [];
@@ -22,10 +21,8 @@ export const ErrorInterceptor: HttpInterceptorFn = (req, next) => {
                         messages.push(...validationErrors[key]);
                     }
                 }
-
                 errorMessage = messages.join(", ");
             } else {
-                console.log("Active")
                 errorMessage = error.error?.message || error.message || "Something went wrong";
             }
 

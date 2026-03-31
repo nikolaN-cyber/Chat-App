@@ -14,14 +14,24 @@
       @for (conv of privateChats(); track conv.id) {
       <a class="conversation-container" [routerLink]="['/home/chat', conv.id]" [state]="{ data: conv }"
         routerLinkActive="active-chat" mat-list-item>
+
         @if (conv.photoUrl) {
         <img matListItemAvatar [src]="imageBaseUrl + conv.photoUrl" alt="User avatar" class="avatar-border">
         } @else {
         <mat-icon matListItemIcon class="text-secondary">account_circle</mat-icon>
         }
+
         <div matListItemTitle class="conv-title fw-bold">
           {{ conv.title || 'Private chat' }}
         </div>
+
+        @if (conv.unreadCount > 0) {
+        <div matListItemMeta>
+          <span class="badge rounded-pill bg-danger shadow-sm">
+            {{ conv.unreadCount }}
+          </span>
+        </div>
+        }
       </a>
       }
       }
@@ -31,10 +41,20 @@
       @for (conv of groupChats(); track conv.id) {
       <a class="conversation-container" [routerLink]="['/home/chat', conv.id]" [state]="{ data: conv }"
         routerLinkActive="active-chat" mat-list-item>
+
         <mat-icon matListItemIcon>groups</mat-icon>
+
         <div matListItemTitle class="conv-title fw-bold">
           {{ conv.title }}
         </div>
+
+        @if (conv.unreadCount > 0) {
+        <div matListItemMeta>
+          <span class="badge rounded-pill bg-danger shadow-sm">
+            {{ conv.unreadCount }}
+          </span>
+        </div>
+        }
       </a>
       }
       }

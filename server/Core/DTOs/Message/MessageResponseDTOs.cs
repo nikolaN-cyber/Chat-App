@@ -6,5 +6,6 @@ public record MessageResponse(
     DateTime CreatedAt,
     string AuthorProfilePicture,
     string? FileUrl,
-    string? FileType
+    string? FileType,
+    int ConversationId
 );

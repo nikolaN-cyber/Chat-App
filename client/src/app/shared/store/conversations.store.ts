@@ -43,7 +43,7 @@ export const conversationsStore = signalStore(
 
                                     let updatedConversations;
 
-                                    if (index !== -1) {                                       
+                                    if (index !== -1) {
                                         updatedConversations = [...currentConversations];
                                         updatedConversations[index] = data;
                                     } else {
@@ -91,6 +91,18 @@ export const conversationsStore = signalStore(
                     )
                 )
             )
-        )
+        ),
+        incrementUnreadCount: (conversationId: number) => {
+            patchState(store, (state) => ({
+                conversations: state.conversations?.map((c) => c.id === conversationId ? { ...c, unreadCount: (c.unreadCount || 0) + 1 } : c) ?? []
+            }))
+        },
+        resetUnreadCount: (conversationId: number) => {
+            patchState(store, (state) => ({
+                conversations: state.conversations?.map((c) =>
+                    c.id === conversationId ? { ...c, unreadCount: 0 } : c
+                ) ?? []
+            }));
+        }
     })),
 )

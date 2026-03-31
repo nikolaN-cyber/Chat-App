@@ -4,12 +4,14 @@ import { chatStore } from "../../shared/store/chat.store";
 import { authStore } from "../../shared/store/auth.store";
 import { environment } from "../../../environments/environment";
 import { BehaviorSubject, filter, firstValueFrom } from "rxjs";
+import { conversationsStore } from "../../shared/store/conversations.store";
 
 @Injectable({ providedIn: 'root' })
 export class ChatSignalRService {
     private hubConnection?: signalR.HubConnection;
     private chatStore = inject(chatStore);
     private authStore = inject(authStore);
+    private conversationsStore = inject(conversationsStore);
 
     private isConnected$ = new BehaviorSubject<boolean>(false);
 
@@ -29,7 +31,15 @@ export class ChatSignalRService {
             .build();
 
         this.hubConnection.on('ReceiveMessage', (message) => {
-            this.chatStore.addMessage(message);
+            const activeId = this.chatStore.currentConversationId();
+            console.log(activeId);
+            if (message.conversationId === activeId) {
+                console.log("SentFromHere")
+                this.chatStore.addMessage(message);
+            } else {
+                console.log("Active is");
+                this.conversationsStore.incrementUnreadCount(message.conversationId);
+            }
         });
 
         this.hubConnection.on('UserStatusChanged', (username, isOnline) => {

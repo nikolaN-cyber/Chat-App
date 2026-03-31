@@ -81,7 +81,9 @@ namespace Core.Services
 
             if (conversation == null) throw new KeyNotFoundException("Conversation not found");
 
-            if (!conversation.Participants.Any(p => p.UserId == currentUserId))
+            var senderParticipation = conversation.Participants.FirstOrDefault(p => p.UserId == currentUserId);
+
+            if (senderParticipation == null)
                 throw new UnauthorizedAccessException("You are not part of this conversation");
 
             var sender = await _context._users.FirstAsync(u => u.Id == currentUserId, cancellationToken);
@@ -97,6 +99,9 @@ namespace Core.Services
             };
 
             _context._messages.Add(message);
+            await _context.SaveChangesAsync(cancellationToken);
+            conversation.LastMessageAddedId = message.Id;
+            senderParticipation.LastReadMessageId = message.Id;
             await _context.SaveChangesAsync(cancellationToken);
 
             var recipients = conversation.Participants.Where(p => p.UserId != currentUserId).Select(p => p.User);
@@ -130,7 +135,9 @@ namespace Core.Services
                 message.CreatedAt,
                 sender.PhotoUrl,
                 message.FileUrl,
-                message.FileType
+                message.FileType,
+                request.ConversationId
+              
             );
             return ApiResponse<MessageResponse>.SuccessResponse(response);
         }
