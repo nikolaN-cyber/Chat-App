@@ -5,6 +5,7 @@ import { authStore } from "../../shared/store/auth.store";
 import { environment } from "../../../environments/environment";
 import { BehaviorSubject, filter, firstValueFrom } from "rxjs";
 import { conversationsStore } from "../../shared/store/conversations.store";
+import { ConversationResponse } from "../models/conversation";
 
 @Injectable({ providedIn: 'root' })
 export class ChatSignalRService {
@@ -32,19 +33,30 @@ export class ChatSignalRService {
 
         this.hubConnection.on('ReceiveMessage', (message) => {
             const activeId = this.chatStore.currentConversationId();
-            console.log(activeId);
             if (message.conversationId === activeId) {
-                console.log("SentFromHere")
                 this.chatStore.addMessage(message);
             } else {
-                console.log("Active is");
                 this.conversationsStore.incrementUnreadCount(message.conversationId);
             }
         });
 
-        this.hubConnection.on('UserStatusChanged', (username, isOnline) => {
-            console.log(`User ${username} is ${isOnline ? 'Online' : 'Offline'}`);
+        this.hubConnection.on('UserStatusChanged', (userId: number, isOnline: boolean) => {
+            this.conversationsStore.updateUserOnlineStatus(userId, isOnline)
         });
+
+        this.hubConnection.on('DeleteConversation', (conversationId: number, adminId: number) => {
+            const myId = this.authStore.currentUser()?.id;
+            if (adminId !== myId) {
+                this.conversationsStore.removeConversation(conversationId)
+            }
+        });
+
+        this.hubConnection.on('CreateConversation', (conversation: ConversationResponse, adminId: number) => {
+            const myId = this.authStore.currentUser()?.id;
+            if (adminId !== myId){
+                this.conversationsStore.addConversation(conversation)
+            }
+        })
 
         this.hubConnection
             .start()
@@ -60,7 +72,6 @@ export class ChatSignalRService {
         if (!this.hubConnection) {
             this.startConnection();
         }
-
         await firstValueFrom(this.isConnected$.pipe(filter(connected => connected)));
         await this.hubConnection?.invoke('JoinConversation', conversationId);
     }

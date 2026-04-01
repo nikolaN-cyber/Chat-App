@@ -1,9 +1,11 @@
 ﻿using Core.DTOs.Conversation;
 using Core.DTOs.Message;
+using Core.Hubs;
 using Core.Interfaces;
 using Core.Types;
 using Domain.Entities;
 using Infrastructure.Contexts;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Core.Services
@@ -12,11 +14,13 @@ namespace Core.Services
     {
         private readonly AppDbContext _context;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IHubContext<ChatHub> _hubContext;
 
-        public ConversationService(AppDbContext context, ICurrentUserService currentUserService)
+        public ConversationService(AppDbContext context, ICurrentUserService currentUserService, IHubContext<ChatHub> hubContext)
         {
             _context = context;
             _currentUserService = currentUserService;
+            _hubContext = hubContext;
         }
 
         public async Task<ApiResponse<ConversationDetails>> GetConversation(int conversationId, CancellationToken cancellationToken)
@@ -144,6 +148,9 @@ namespace Core.Services
                 PhotoUrl: !isGroup && otherUser != null ? otherUser.PhotoUrl : null
             );
 
+            string groupName = newConversation.Id.ToString();
+            await _hubContext.Clients.Group(groupName).SendAsync("CreateConversation", newConversation.Id, currentUserId);
+
             return ApiResponse<ConversationResponse>.SuccessResponse(response, isGroup ? "Grupa kreirana" : "Privatni čet kreiran");
         }
 
@@ -194,19 +201,23 @@ namespace Core.Services
             int currentUserId = _currentUserService.GetCurrentUserId();
             if (currentUserId == 0)
             {
-                return ApiResponse<bool>.FailureResponse("Unauthorized");
+                throw new UnauthorizedAccessException("Unauthorized");
             }
             var conversation = await _context._conversation.FirstOrDefaultAsync(c => c.Id == ConversationId, cancellationToken);
             if (conversation == null)
             {
-                return ApiResponse<bool>.FailureResponse("Conersation with this id does not exist");
+                throw new ArgumentException("Conversation with this id does not exist");
             }
             if (conversation.AdminId != currentUserId)
             {
-                return ApiResponse<bool>.FailureResponse("Unauthorized action");
+                throw new ArgumentException("Unauthorized access, only admin can delete");
             }
             _context._conversation.Remove(conversation);
             await _context.SaveChangesAsync(cancellationToken);
+
+            string groupName = ConversationId.ToString();
+            await _hubContext.Clients.Group(groupName).SendAsync("DeleteConversation", ConversationId, currentUserId);
+
             return ApiResponse<bool>.SuccessResponse(true);
         }
 

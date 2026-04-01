@@ -14,7 +14,7 @@ namespace Core.Services
 
         public int GetCurrentUserId()
         {
-            var userStringId = _httpContextAccessor.HttpContext?.User?.FindFirst("id")?.Value;
+            var userStringId = _httpContextAccessor.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userStringId))
             {
                 return 0;

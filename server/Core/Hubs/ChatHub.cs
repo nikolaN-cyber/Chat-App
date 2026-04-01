@@ -6,15 +6,21 @@ namespace Core.Hubs
     {
         public override async Task OnConnectedAsync()
         {
-            var username = Context.User?.Identity?.Name;
-            await Clients.All.SendAsync("UserStatusChanged", username, true);
+            var userId = Context.UserIdentifier;
+            if (userId != null)
+            {
+                await Clients.All.SendAsync("UserStatusChanged", int.Parse(userId), true);
+            }
             await base.OnConnectedAsync();
         }
 
         public override async Task OnDisconnectedAsync(Exception ex)
         {
-            var username = Context.User?.Identity?.Name;
-            await Clients.All.SendAsync("UserStatusChanged", username, false);
+            var userId = Context.UserIdentifier;
+            if (userId != null)
+            {
+                await Clients.All.SendAsync("UserStatusChanged", int.Parse(userId), false);
+            }
             await base.OnDisconnectedAsync(ex);
         }
 
@@ -26,6 +32,12 @@ namespace Core.Hubs
         public async Task LeaveConversation(int conversationId)
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, conversationId.ToString());
+        }
+
+        public async Task DeleteConversation(int conversationId)
+        {
+            string groupName = conversationId.ToString();
+            await Clients.OthersInGroup(groupName).SendAsync("DeleteConversation", conversationId);
         }
     }
 }

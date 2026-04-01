@@ -45,3 +45,10 @@ export interface UserStatusResponse {
     emoji: string | null;
     status: string | null;
 }
+
+export interface EditUser {
+    username: string;
+    firstName: string;
+    lastName: string;
+    age: number;
+}

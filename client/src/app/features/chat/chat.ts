@@ -95,8 +95,6 @@ export class Chat implements OnInit, OnDestroy {
     this.convStore.resetUnreadCount(id);
     const selectedConv = this.convStore.conversations()?.find(c => c.id === id);
     this.selectedConvTitle.set(selectedConv?.title || "Private chat");
-    this.signalrService.startConnection();
-    await this.signalrService.joinConversation(id);
     setTimeout(() => this.scrollToBottom(), 500);
   }
 

@@ -48,7 +48,7 @@
         <div class="message-row d-flex mb-3 w-100" [class.justify-content-end]="isMe">
           <div class="message-bubble p-2 px-3 shadow-sm" [class.my-message]="isMe" [class.other-message]="!isMe">
             
-            @if (msg.fileUrl && msg.fileType?.startsWith('image/')) {
+            @if (msg.fileUrl && msg.fileType.startsWith('image/')) {
               <div class="message-image-container mb-2">
                 <img [src]="imageBaseUrl + msg.fileUrl" class="img-fluid rounded chat-msg-img"
                   style="cursor: pointer; max-height: 300px;" (click)="openFullImage(msg.fileUrl)">

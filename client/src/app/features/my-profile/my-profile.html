@@ -76,7 +76,10 @@
       </div>
     </mat-card-content>
 
-    <mat-card-actions class="p-3 border-top d-flex justify-content-end">
+    <mat-card-actions class="p-3 border-top d-flex justify-content-between">
+      <button (click)="openEditModal()" mat-button>
+        Edit profile
+      </button>
       <button mat-button color="primary" [matMenuTriggerFor]="statusMenu">
         <mat-icon class="me-1">add_reaction</mat-icon> ADD STATUS
       </button>

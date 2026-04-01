@@ -1,7 +1,10 @@
 ﻿using Core.DTOs.Conversation;
+using Core.Hubs;
 using Core.Interfaces;
+using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace server.Controllers
 {
@@ -45,6 +48,7 @@ namespace server.Controllers
         public async Task<IActionResult> DeleteConversation([FromRoute] int id, CancellationToken cancellationToken)
         {
             var response = await _conversationService.DeleteConversationAsync(id, cancellationToken);
+            
             return Ok(response);
         }
 

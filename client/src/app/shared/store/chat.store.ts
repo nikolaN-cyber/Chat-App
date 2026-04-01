@@ -43,7 +43,6 @@ export const chatStore = signalStore(
                 tap(() => patchState(store, { loading: true })),
 
                 switchMap((conversationId) => {
-                    console.log(conversationId);
                     return conversationService.getConversation(conversationId).pipe(
                         tapResponse({
                             next: (data) => { if (data) { patchState(store, { messages: data.messages, participants: data.participants, currentConversationId: data.id, adminId: data.adminId, loading: false, error: null }); } },
@@ -153,7 +152,6 @@ export const chatStore = signalStore(
             )
         ),
         addMessage(newMessage: any) {
-            console.log(newMessage);
             patchState(store, (state) => ({
                 messages: [...state.messages, newMessage]
             }));

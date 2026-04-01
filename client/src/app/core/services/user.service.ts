@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { environment } from "../../../environments/environment";
 import { Message, MessageResponse } from "../models/message";
-import { PhotoUpdateResponse, UserSearchResponse, UserStatusRequest, UserStatusResponse } from "../models/user";
+import { EditUser, PhotoUpdateResponse, UserSearchResponse, UserStatusRequest, UserStatusResponse } from "../models/user";
 import { map } from "rxjs";
 import { ApiResponse } from "../models/api-response";
 
@@ -43,6 +43,12 @@ export class UserService {
 
     getStatus() {
         return this.http.get<ApiResponse<UserStatusResponse>>(`${this.apiUrl}/get-user-status`).pipe(
+            map(res => res.data)
+        );
+    }
+
+    editProfile(request: EditUser) {
+        return this.http.patch<ApiResponse<EditUser>>(`${this.apiUrl}/edit`, request).pipe(
             map(res => res.data)
         );
     }

@@ -22,7 +22,15 @@
         }
 
         <div matListItemTitle class="conv-title fw-bold">
-          {{ conv.title || 'Private chat' }}
+          <div class="d-flex align-items-center gap-2">
+            <span>{{ conv.title || 'Private chat' }}</span>
+
+            @if (conv.isOnline) {
+            <span class="bg-success rounded-circle shadow-sm" style="width: 8px; height: 8px; display: inline-block;"
+              title="Online">
+            </span>
+            }
+          </div>
         </div>
 
         @if (conv.unreadCount > 0) {

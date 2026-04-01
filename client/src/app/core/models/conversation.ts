@@ -5,6 +5,7 @@ export interface ConversationResponse {
     title: string;
     isGroup: boolean,
     unreadCount: number;
+    isOnline?: boolean;
     participantIds: number[];
     participantNames: string[];
     photoUrl: string | null;

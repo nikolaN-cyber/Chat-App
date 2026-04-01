@@ -1,0 +1,31 @@
+<div class="edit-modal">
+    <form (ngSubmit)="onSubmit()" [formGroup]="editProfileForm">
+        <mat-dialog-content class="d-flex align-items-center justify-content-center flex-column">
+            <h2 mat-dialog-title>Edit profile</h2>
+            <mat-form-field appearance="outline">
+                <mat-label>Username</mat-label>
+                <input matInput formControlName="username">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label>First Name</mat-label>
+                <input matInput formControlName="firstName">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label>Last Name</mat-label>
+                <input matInput formControlName="lastName">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label>Age</mat-label>
+                <input matInput formControlName="age" type="number">
+            </mat-form-field>
+            <div>
+                <button [disabled]="editProfileForm.invalid" type="submit" mat-button>
+                    Save changes
+                </button>
+                <button (click)="onCloseClicked()" mat-button>
+                    Close
+                </button>
+            </div>
+        </mat-dialog-content>
+    </form>
+</div>

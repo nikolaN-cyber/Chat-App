@@ -9,6 +9,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { UserStatusRequest } from '../../core/models/user';
 import { MatMenuModule } from '@angular/material/menu';
 import { userStore } from '../../shared/store/user.store';
+import { MatDialog } from '@angular/material/dialog';
+import { EditProfileDialog } from '../../shared/components/edit-profile-dialog/edit-profile-dialog';
 
 @Component({
   selector: 'app-my-profile',
@@ -26,6 +28,12 @@ export class MyProfile {
   readonly authStore = inject(authStore);
   readonly userStore = inject(userStore);
   readonly userStatusStore = inject(userStatusStore);
+  dialog = inject(MatDialog);
+
+  openEditModal() {
+    console.log("Modal opened")
+    this.dialog.open(EditProfileDialog, {width: '650px', height: '450px'});
+  }
 
   getEndOfWorkDay() {
     const date = new Date();

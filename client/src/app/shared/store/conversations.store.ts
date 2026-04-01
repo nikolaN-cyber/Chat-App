@@ -6,6 +6,7 @@ import { pipe, switchMap, tap } from "rxjs";
 import { inject } from "@angular/core";
 import { tapResponse } from "@ngrx/operators";
 import { Router } from "@angular/router";
+import { authStore } from "./auth.store";
 
 export const conversationsStore = signalStore(
     { providedIn: 'root' },
@@ -102,6 +103,28 @@ export const conversationsStore = signalStore(
                 conversations: state.conversations?.map((c) =>
                     c.id === conversationId ? { ...c, unreadCount: 0 } : c
                 ) ?? []
+            }));
+        },
+        updateUserOnlineStatus: (userId: number, isOnline: boolean) => {
+            const myId = inject(authStore).currentUser()?.id;
+            console.log(isOnline);
+            patchState(store, (state) => ({
+                conversations: state.conversations?.map((conv) => {
+                    if (!conv.isGroup && userId !== myId && conv.participantIds.includes(userId)) {
+                        return { ...conv, isOnline: isOnline };
+                    }
+                    return conv;
+                })
+            }))
+        },
+        removeConversation(conversationId: number) {
+            patchState(store, (state) => ({
+                conversations: state.conversations?.filter(c => c.id != conversationId)
+            }))
+        },
+        addConversation(conversation: ConversationResponse) {
+            patchState(store, (state) => ({
+                conversations: [conversation, ...(state.conversations ?? [])]
             }));
         }
     })),

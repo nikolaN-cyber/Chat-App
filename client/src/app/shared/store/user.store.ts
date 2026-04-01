@@ -59,6 +59,6 @@ export const userStore = signalStore(
                 }
                 )
             )
-        )
+        ),
     }))
 )
