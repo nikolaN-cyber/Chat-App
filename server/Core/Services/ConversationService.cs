@@ -141,15 +141,17 @@ namespace Core.Services
             var response = new ConversationResponse(
                 Id: newConversation.Id,
                 Title: isGroup ? newConversation.Title : otherUser != null ? $"{otherUser.FirstName} {otherUser.LastName}".Trim() : "Private Chat",
-                UnreadCount: 0, // Za novu konverzaciju je uvek 0
+                UnreadCount: 0,
                 IsGroup: newConversation.IsGroup,
                 ParticipantIds: allParticipantIds,
                 ParticipantNames: participantsFromDb.Select(u => u.Username).ToList(),
                 PhotoUrl: !isGroup && otherUser != null ? otherUser.PhotoUrl : null
             );
 
-            string groupName = newConversation.Id.ToString();
-            await _hubContext.Clients.Group(groupName).SendAsync("CreateConversation", newConversation.Id, currentUserId);
+            var participantIdsAsStrings = allParticipantIds.Select(id => id.ToString()).ToList();
+
+            await _hubContext.Clients.Users(participantIdsAsStrings)
+                .SendAsync("CreateConversation", response, currentUserId);
 
             return ApiResponse<ConversationResponse>.SuccessResponse(response, isGroup ? "Grupa kreirana" : "Privatni čet kreiran");
         }

@@ -15,7 +15,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map, Subscription } from 'rxjs';
 import { ChatSignalRService } from '../../core/services/chat-signalr.service';
 import { environment } from '../../../environments/environment.development';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { FileService } from '../../core/services/file.service';
 import { SearchConversationRequest } from '../../core/models/conversation';
 
@@ -36,7 +36,6 @@ export class Chat implements OnInit, OnDestroy {
 
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
-  private snackBar = inject(MatSnackBar);
   private readonly fileService = inject(FileService);
   private signalrService = inject(ChatSignalRService);
 
@@ -69,6 +68,7 @@ export class Chat implements OnInit, OnDestroy {
   });
 
   constructor() {
+
     effect(() => {
       const messages = this.chatStore.messages();
       const searchResults = this.chatStore.searchResult();

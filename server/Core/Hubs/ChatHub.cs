@@ -34,10 +34,13 @@ namespace Core.Hubs
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, conversationId.ToString());
         }
 
-        public async Task DeleteConversation(int conversationId)
+        public async Task UserTyping(int conversationId, bool isTyping)
         {
-            string groupName = conversationId.ToString();
-            await Clients.OthersInGroup(groupName).SendAsync("DeleteConversation", conversationId);
+            var userId = Context.UserIdentifier;
+            if (userId != null)
+            {
+                await Clients.OthersInGroup(conversationId.ToString()).SendAsync("UserTyping", conversationId, isTyping);
+            }
         }
     }
 }

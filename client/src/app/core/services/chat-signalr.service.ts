@@ -53,10 +53,16 @@ export class ChatSignalRService {
 
         this.hubConnection.on('CreateConversation', (conversation: ConversationResponse, adminId: number) => {
             const myId = this.authStore.currentUser()?.id;
-            if (adminId !== myId){
+            if (adminId !== myId) {
                 this.conversationsStore.addConversation(conversation)
             }
         })
+
+        this.hubConnection.on('UserTyping', (conversationId: number, isTyping: boolean) => {
+            if (this.chatStore.currentConversationId() === conversationId) {
+                this.chatStore.setIsTyping(isTyping);
+            }
+        });
 
         this.hubConnection
             .start()
@@ -80,6 +86,10 @@ export class ChatSignalRService {
         if (this.hubConnection?.state === signalR.HubConnectionState.Connected) {
             await this.hubConnection.invoke('LeaveConversation', conversationId);
         }
+    }
+
+    public async sendTypingNotification(conversationId: number, isTyping: boolean) {
+        await this.hubConnection?.invoke('UserTyping', conversationId, isTyping);
     }
 
     public stopConnection() {
