@@ -6,6 +6,7 @@ import { environment } from "../../../environments/environment";
 import { BehaviorSubject, filter, firstValueFrom } from "rxjs";
 import { conversationsStore } from "../../shared/store/conversations.store";
 import { ConversationResponse } from "../models/conversation";
+import { MessageResponse } from "../models/message";
 
 @Injectable({ providedIn: 'root' })
 export class ChatSignalRService {
@@ -60,10 +61,17 @@ export class ChatSignalRService {
 
         this.hubConnection.on('UserTyping', (conversationId: number, isTyping: boolean, username: string) => {
             if (this.chatStore.currentConversationId() === conversationId) {
-                console.log("active")
                 this.chatStore.setIsTyping(isTyping, username);
             }
         });
+
+        this.hubConnection.on('UserAdded', (systemMessage) => {
+            this.chatStore.addMessage(systemMessage);
+        })
+
+        this.hubConnection.on('UserRemoved', (systemMessage) => {
+            this.chatStore.addMessage(systemMessage);
+        })
 
         this.hubConnection
             .start()

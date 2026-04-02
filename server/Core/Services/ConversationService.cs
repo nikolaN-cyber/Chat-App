@@ -287,8 +287,19 @@ namespace Core.Services
                 JoinedAt = DateTime.UtcNow
             });
 
+            var systemMessage = new Message
+            {
+                Content = $"{participantsData[0].Username} is added to group",
+                Type = MessageType.UserAdded,
+                CreatedAt = DateTime.UtcNow,
+                ConversationId = request.ConversationId
+            };
+
             _context._participations.AddRange(participations);
+            _context._messages.Add(systemMessage);
             await _context.SaveChangesAsync(cancellationToken);
+
+            await _hubContext.Clients.Group(request.ConversationId.ToString()).SendAsync("UserAdded", systemMessage);
 
             return ApiResponse<List<ParticipantNames>>.SuccessResponse(participantsData);
         }

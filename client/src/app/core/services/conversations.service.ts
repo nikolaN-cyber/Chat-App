@@ -3,7 +3,7 @@ import { inject, Injectable } from "@angular/core";
 import { environment } from "../../../environments/environment";
 import { AddUsersRequest, ConversationDetails, ConversationResponse, CreateConversationData, ParticipantNames, SearchConversationRequest } from "../models/conversation";
 import { map } from "rxjs";
-import { ApiResponse } from "../models/api-response"; // Proveri putanju do interfejsa
+import { ApiResponse } from "../models/api-response";
 import { MessageResponse } from "../models/message";
 
 @Injectable({

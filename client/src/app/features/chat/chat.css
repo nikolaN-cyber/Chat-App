@@ -93,3 +93,18 @@
   --mdc-snackbar-container-color: #ed6c02;
   --mdc-snackbar-label-text-color: white;
 }
+
+.system-message {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.system-badge {
+  background-color: rgba(0,0,0,0.1);
+  color: var(--text-color);
+  font-size: 0.75rem;
+  opacity: 0.8;
+  max-width: 60%;
+  text-align: center;
+}

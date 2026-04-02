@@ -97,7 +97,6 @@ builder.Services.AddAuthentication(options =>
 });
 
 var provider = new FileExtensionContentTypeProvider();
-provider.Mappings[".cs"] = "text/plain";
 
 //App building and middleware pipelines
 var app = builder.Build();
