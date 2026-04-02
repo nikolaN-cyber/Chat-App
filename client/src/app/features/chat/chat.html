@@ -47,7 +47,6 @@
 
     <div class="message-row d-flex mb-3 w-100" [class.justify-content-end]="isMe">
       <div class="message-bubble p-2 px-3 shadow-sm" [class.my-message]="isMe" [class.other-message]="!isMe">
-
         @if (msg.fileUrl && msg.fileType.startsWith('image/')) {
         <div class="message-image-container mb-2">
           <img [src]="imageBaseUrl + msg.fileUrl" class="img-fluid rounded chat-msg-img"
@@ -79,8 +78,18 @@
     </div>
     } @empty {
     <div class="d-flex justify-content-center align-items-center h-100">
-      <p>{{ chatStore.isSearching() ? 'No messages match your search' : 'There are no messages in this conversation yet'
-        }}</p>
+      <p>{{ chatStore.isSearching() ? 'No messages match your search' : 'There are no messages in this conversation yet' }}</p>
+    </div>
+    }
+
+    @if(chatStore.isTyping()){
+    <div class="typing-indicator-row d-flex mb-3">
+      <div class="message-bubble other-message p-2 px-3 shadow-sm d-flex align-items-center gap-2">
+        <div class="typing-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <small class="fw-italic text-muted">{{chatStore.userTyping()}} is typing...</small>
+      </div>
     </div>
     }
     }
@@ -93,7 +102,8 @@
         <button type="button" mat-icon-button (click)="fileInput.click()" title="Attach file">
           <mat-icon>attach_file</mat-icon>
         </button>
-        <input formControlName="content" placeholder="Send a message..." type="text" class="chat-input flex-grow-1">
+        <input (keydown)="onKeyDown()" formControlName="content" placeholder="Send a message..." type="text"
+          class="chat-input flex-grow-1">
         <button mat-fab color="primary" type="submit"
           [disabled]="sendMessageForm.invalid && !sendMessageForm.value.content">
           <mat-icon>send</mat-icon>

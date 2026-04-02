@@ -17,6 +17,7 @@ export const chatStore = signalStore(
         participants: [] as ParticipantNames[],
         searchResult: [] as MessageResponse[],
         isTyping: false as boolean,
+        userTyping: '' as string,
         isSearching: false as boolean,
         currentConversationId: null as number | null,
         adminId: null as number | null,
@@ -160,8 +161,8 @@ export const chatStore = signalStore(
         clearIsSearching() {
             patchState(store, { isSearching: false, searchResult: [] });
         },
-        setIsTyping(isTypingStatus: boolean){
-            patchState(store, {isTyping: isTypingStatus});
+        setIsTyping(isTypingStatus: boolean, usernameTyping: string){
+            patchState(store, {isTyping: isTypingStatus, userTyping: usernameTyping});
         }
     }))
 )

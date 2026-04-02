@@ -34,12 +34,12 @@ namespace Core.Hubs
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, conversationId.ToString());
         }
 
-        public async Task UserTyping(int conversationId, bool isTyping)
+        public async Task UserTyping(int conversationId, bool isTyping, string userTyping)
         {
             var userId = Context.UserIdentifier;
             if (userId != null)
             {
-                await Clients.OthersInGroup(conversationId.ToString()).SendAsync("UserTyping", conversationId, isTyping);
+                await Clients.OthersInGroup(conversationId.ToString()).SendAsync("UserTyping", conversationId, isTyping, userTyping);
             }
         }
     }

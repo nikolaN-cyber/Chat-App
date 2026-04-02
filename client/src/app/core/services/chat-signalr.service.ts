@@ -58,9 +58,10 @@ export class ChatSignalRService {
             }
         })
 
-        this.hubConnection.on('UserTyping', (conversationId: number, isTyping: boolean) => {
+        this.hubConnection.on('UserTyping', (conversationId: number, isTyping: boolean, username: string) => {
             if (this.chatStore.currentConversationId() === conversationId) {
-                this.chatStore.setIsTyping(isTyping);
+                console.log("active")
+                this.chatStore.setIsTyping(isTyping, username);
             }
         });
 
@@ -88,8 +89,9 @@ export class ChatSignalRService {
         }
     }
 
-    public async sendTypingNotification(conversationId: number, isTyping: boolean) {
-        await this.hubConnection?.invoke('UserTyping', conversationId, isTyping);
+    public async sendTypingNotification(conversationId: number, isTyping: boolean, username: string) {
+        username = this.authStore.currentUser()?.username!;
+        await this.hubConnection?.invoke('UserTyping', conversationId, isTyping, username);
     }
 
     public stopConnection() {

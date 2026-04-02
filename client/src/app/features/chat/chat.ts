@@ -11,8 +11,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map, Subscription } from 'rxjs';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { debounceTime, map, Subject, Subscription, tap, throttleTime } from 'rxjs';
 import { ChatSignalRService } from '../../core/services/chat-signalr.service';
 import { environment } from '../../../environments/environment.development';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
@@ -32,6 +32,8 @@ import { SearchConversationRequest } from '../../core/models/conversation';
 })
 export class Chat implements OnInit, OnDestroy {
   selectedConvTitle = signal('');
+  userIsTyping = new Subject<boolean>();
+
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
 
   private fb = inject(FormBuilder);
@@ -78,6 +80,25 @@ export class Chat implements OnInit, OnDestroy {
         });
       }
     });
+
+    this.userIsTyping.pipe(
+      throttleTime(1000),
+      tap(() => {
+        const id = this.routeId();
+        const username = this.authStore.currentUser()?.username;
+        if (id) {
+          this.signalrService.sendTypingNotification(id, true, username!);
+        }
+      }),
+      debounceTime(3000),
+      takeUntilDestroyed()
+    ).subscribe(() => {
+      const id = this.routeId();
+      const username = this.authStore.currentUser()?.username;
+      if (id) {
+        this.signalrService.sendTypingNotification(id, false, username!);
+      }
+    })
   }
 
   ngOnInit(): void {
@@ -168,6 +189,13 @@ export class Chat implements OnInit, OnDestroy {
     const currentConvId = this.routeId();
     if (currentConvId && confirm("Are you sure that you want to delete this chat?")) {
       this.convStore.deleteConversation(currentConvId);
+    }
+  }
+
+  onKeyDown() {
+    const content = this.sendMessageForm.get('content')?.value;
+    if (content && content.trim().length >= 0) {
+      this.userIsTyping.next(true);
     }
   }
 
