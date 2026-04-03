@@ -10,7 +10,6 @@ export interface UserRegister{
     age: number;
     email: string;
     password: string;
-    confirmPassword: string;
 }
 
 export interface LoginResponse{

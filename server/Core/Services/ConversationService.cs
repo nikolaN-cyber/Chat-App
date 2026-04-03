@@ -7,6 +7,7 @@ using Domain.Entities;
 using Infrastructure.Contexts;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Core.Services
 {
@@ -28,12 +29,28 @@ namespace Core.Services
             int currentUserId = _currentUserService.GetCurrentUserId();
             if (currentUserId == 0) throw new UnauthorizedAccessException("Unauthorized");
 
+            var participation = await _context._participations.FirstOrDefaultAsync(p => p.UserId == currentUserId && p.ConversationId == conversationId, cancellationToken);
+
+            if (participation == null)
+                throw new UnauthorizedAccessException("You are not a participant of this conversation");
+
             var response = await _context._conversation
                 .AsNoTracking()
                 .Where(c => c.Id == conversationId)
                 .Select(c => new ConversationDetails(
                     c.Id,
+                    c.IsGroup
+                        ? (c.Title ?? "Group Chat")
+                        : (c.Participants.Count == 1
+                            ? "My Notes (Saved)"
+                            : c.Participants
+                                .Where(p => p.UserId != currentUserId)
+                                .Select(p => p.User != null
+                                    ? (p.User.FirstName + " " + p.User.LastName).Trim()
+                                    : "Private Chat")
+                                .FirstOrDefault() ?? "Private Chat"),
                     c.Messages
+                    .Where(m => m.CreatedAt >= participation.JoinedAt)
                         .OrderBy(m => m.CreatedAt)
                         .Select(m => new MessageResponse(
                             m.Author != null ? (m.Author.Username ?? "Unknown") : "Unknown",
@@ -51,22 +68,17 @@ namespace Core.Services
 
             if (response == null) throw new KeyNotFoundException("Conversation does not exist");
 
-            var lastMessageId = await _context._messages
+            var actualLastMessageId = await _context._messages
                 .Where(m => m.ConversationId == conversationId)
                 .OrderByDescending(m => m.Id)
                 .Select(m => m.Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (lastMessageId > 0)
+            if (actualLastMessageId > 0 && participation.LastReadMessageId < actualLastMessageId)
             {
-                var participation = await _context._participations
-                    .FirstOrDefaultAsync(p => p.ConversationId == conversationId && p.UserId == currentUserId, cancellationToken);
-
-                if (participation != null && participation.LastReadMessageId < lastMessageId)
-                {
-                    participation.LastReadMessageId = lastMessageId;
-                    await _context.SaveChangesAsync(cancellationToken);
-                }
+                participation.LastReadMessageId = actualLastMessageId;
+                _context._participations.Update(participation);
+                await _context.SaveChangesAsync(cancellationToken);
             }
 
             return ApiResponse<ConversationDetails>.SuccessResponse(response);
@@ -89,9 +101,10 @@ namespace Core.Services
             if (participantsFromDb.Count != allParticipantIds.Count)
                 throw new ArgumentException("One or more participants do not exist");
 
-            bool isGroup = allParticipantIds.Count > 2 || !string.IsNullOrWhiteSpace(request.Title);
+            bool isSelfChat = allParticipantIds.Count == 1;
+            bool isGroup = allParticipantIds.Count > 2;
 
-            if (!isGroup)
+            if (!isGroup && !isSelfChat)
             {
                 int otherUserId = allParticipantIds.First(id => id != currentUserId);
 
@@ -104,7 +117,6 @@ namespace Core.Services
                         c.Id,
                         c.Participants.Where(p => p.UserId != currentUserId)
                                       .Select(p => p.User.FirstName + " " + p.User.LastName).FirstOrDefault() ?? "Private Chat",
-                        
                         c.IsGroup,
                         c.Messages.Count(m => m.Id > c.Participants
                             .Where(p => p.UserId == currentUserId)
@@ -119,11 +131,30 @@ namespace Core.Services
                 if (existingChat != null)
                     return ApiResponse<ConversationResponse>.SuccessResponse(existingChat, "Učitana postojeća konverzacija");
             }
+            else if (isSelfChat)
+            {
+                var existingNotes = await _context._conversation
+                    .AsNoTracking()
+                    .Where(c => !c.IsGroup && c.Participants.Count == 1 && c.Participants.Any(p => p.UserId == currentUserId))
+                    .Select(c => new ConversationResponse(
+                        c.Id,
+                        c.Title ?? "My Notes (Saved)",
+                        c.IsGroup,
+                        0,
+                        allParticipantIds,
+                        c.Participants.Select(p => p.User.Username).ToList(),
+                        c.Participants.Select(p => p.User.PhotoUrl).FirstOrDefault()
+                    ))
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (existingNotes != null)
+                    return ApiResponse<ConversationResponse>.SuccessResponse(existingNotes, "Učitan vaš Notes");
+            }
 
             var newConversation = new Conversation
             {
                 IsGroup = isGroup,
-                Title = isGroup ? request.Title : null,
+                Title = isGroup ? request.Title : (isSelfChat ? "My Notes (Saved)" : null),
                 AdminId = currentUserId,
                 Participants = allParticipantIds.Select(id => new Participation
                 {
@@ -137,15 +168,18 @@ namespace Core.Services
             await _context.SaveChangesAsync(cancellationToken);
 
             var otherUser = participantsFromDb.FirstOrDefault(u => u.Id != currentUserId);
+            string finalTitle = isGroup ? (newConversation.Title ?? "Unnamed group")
+                               : (isSelfChat ? "My Notes (Saved)"
+                               : (otherUser != null ? $"{otherUser.FirstName} {otherUser.LastName}".Trim() : "Private Chat"));
 
             var response = new ConversationResponse(
                 Id: newConversation.Id,
-                Title: isGroup ? newConversation.Title : otherUser != null ? $"{otherUser.FirstName} {otherUser.LastName}".Trim() : "Private Chat",
+                Title: finalTitle,
                 UnreadCount: 0,
                 IsGroup: newConversation.IsGroup,
                 ParticipantIds: allParticipantIds,
                 ParticipantNames: participantsFromDb.Select(u => u.Username).ToList(),
-                PhotoUrl: !isGroup && otherUser != null ? otherUser.PhotoUrl : null
+                PhotoUrl: !isGroup && !isSelfChat && otherUser != null ? otherUser.PhotoUrl : null
             );
 
             var participantIdsAsStrings = allParticipantIds.Select(id => id.ToString()).ToList();
@@ -153,7 +187,7 @@ namespace Core.Services
             await _hubContext.Clients.Users(participantIdsAsStrings)
                 .SendAsync("CreateConversation", response, currentUserId);
 
-            return ApiResponse<ConversationResponse>.SuccessResponse(response, isGroup ? "Grupa kreirana" : "Privatni čet kreiran");
+            return ApiResponse<ConversationResponse>.SuccessResponse(response);
         }
 
         public async Task<ApiResponse<List<ConversationResponse>>> GetUserConversationsAsync(CancellationToken cancellationToken)
@@ -167,15 +201,14 @@ namespace Core.Services
                 .Select(c => new ConversationResponse
                 (
                     c.Id,
-                    c.IsGroup
-                        ? (c.Title ?? "Group Chat")
-                        : (c.Participants
-                            .Where(p => p.UserId != currentUserId)
-                            .Select(p => p.User != null
-                                ? (p.User.FirstName + " " + p.User.LastName).Trim()
-                                : "Private Chat")
-                            .FirstOrDefault() ?? "Private Chat"),
-                
+                    !c.IsGroup && c.Participants.Count == 1 && c.Participants.Any(p => p.UserId == currentUserId)
+                        ? "My Notes"
+                        : c.IsGroup
+                            ? (c.Title ?? "Group Chat")
+                            : (c.Participants
+                                .Where(p => p.UserId != currentUserId)
+                                .Select(p => (p.User.FirstName + " " + p.User.LastName).Trim())
+                                .FirstOrDefault() ?? "Private Chat"),
                     c.IsGroup,
                     c.Messages.Count(m => m.Id > c.Participants
                         .Where(p => p.UserId == currentUserId)
@@ -185,7 +218,7 @@ namespace Core.Services
                     c.Participants.Select(p => p.User != null
                         ? (p.User.FirstName ?? "User")
                         : "Unknown").ToList(),
-                    !c.IsGroup
+                    !c.IsGroup && c.Participants.Count > 1
                         ? c.Participants
                             .Where(p => p.UserId != currentUserId)
                             .Select(p => p.User.PhotoUrl)
@@ -329,6 +362,26 @@ namespace Core.Services
                                 )).ToListAsync(cancellationToken);
 
             return ApiResponse<List<MessageResponse>>.SuccessResponse(messages);          
+        }
+
+        public async Task<ApiResponse<bool>> DeleteChatHistory(DeleteConversationHistoryRequest request, CancellationToken cancellationToken)
+        {
+            int currentUserId = _currentUserService.GetCurrentUserId();
+            if (currentUserId == 0) throw new UnauthorizedAccessException("Unauthorized");
+
+            var participation = await _context._participations.FirstOrDefaultAsync(p => p.UserId == currentUserId && p.ConversationId == request.ConversationId, cancellationToken);
+            var lastMessageId = await _context._messages.Where(m => m.ConversationId == request.ConversationId).OrderByDescending(m => m.CreatedAt).Select(m => m.Id).FirstOrDefaultAsync(cancellationToken);
+
+            if (participation == null)
+            {
+                throw new ArgumentException("Participation does not exist");
+            }
+
+            participation.JoinedAt = DateTime.UtcNow;
+            participation.LastReadMessageId = lastMessageId;
+            _context._participations.Update(participation);
+            await _context.SaveChangesAsync(cancellationToken);
+            return ApiResponse<bool>.SuccessResponse(true);
         }
     }
 }

@@ -16,6 +16,7 @@ export const chatStore = signalStore(
         messages: [] as MessageResponse[],
         participants: [] as ParticipantNames[],
         searchResult: [] as MessageResponse[],
+        title: '' as string,
         isTyping: false as boolean,
         userTyping: '' as string,
         isSearching: false as boolean,
@@ -47,7 +48,7 @@ export const chatStore = signalStore(
                 switchMap((conversationId) => {
                     return conversationService.getConversation(conversationId).pipe(
                         tapResponse({
-                            next: (data) => { if (data) { patchState(store, { messages: data.messages, participants: data.participants, currentConversationId: data.id, adminId: data.adminId, loading: false, error: null }); } },
+                            next: (data) => { if (data) { patchState(store, { messages: data.messages, title: data.title, participants: data.participants, currentConversationId: data.id, adminId: data.adminId, loading: false, error: null }); console.log(data.title)} },
                             error: (err: any) => { patchState(store, { error: err.error?.message || "Error while loading messages", loading: false }) }
                         })
                     )
@@ -129,7 +130,6 @@ export const chatStore = signalStore(
         searchConversation: rxMethod<SearchConversationRequest>(
             pipe(
                 switchMap((payload) => {
-                    // Ako je filter prazan, odmah prekini i očisti sve
                     if (!payload.filter || payload.filter.trim().length === 0) {
                         patchState(store, { isSearching: false, searchResult: [] });
                         return EMPTY;
@@ -153,6 +153,26 @@ export const chatStore = signalStore(
                 })
             )
         ),
+        deleteChatHistory: rxMethod<number>(
+            pipe(
+                tap(() => patchState(store, { loading: true })),
+                switchMap((convId) =>
+                    conversationService.deleteChatHistory(convId).pipe(
+                        tapResponse({
+                            next: (data) => {
+                                if (data == true){
+                                    patchState(store, {
+                                        messages: [],
+                                        loading: false
+                                    })
+                                }
+                            },
+                            error: (err: any) => { patchState(store, {error: err.error?.message}) }
+                        })
+                    )
+                )
+            )
+        ),
         addMessage(newMessage: any) {
             patchState(store, (state) => ({
                 messages: [...state.messages, newMessage]
@@ -161,8 +181,8 @@ export const chatStore = signalStore(
         clearIsSearching() {
             patchState(store, { isSearching: false, searchResult: [] });
         },
-        setIsTyping(isTypingStatus: boolean, usernameTyping: string){
-            patchState(store, {isTyping: isTypingStatus, userTyping: usernameTyping});
+        setIsTyping(isTypingStatus: boolean, usernameTyping: string) {
+            patchState(store, { isTyping: isTypingStatus, userTyping: usernameTyping });
         }
     }))
 )

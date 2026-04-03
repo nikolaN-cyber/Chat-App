@@ -13,6 +13,7 @@ export interface ConversationResponse {
 
 export interface ConversationDetails {
     id: number;
+    title: string;
     messages: MessageResponse[];
     participants: ParticipantNames[];
     adminId: number;

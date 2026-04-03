@@ -32,12 +32,6 @@ namespace Core.Services
 
         public async Task<ApiResponse<bool>> RegisterAsync(RegisterData request, CancellationToken cancellationToken)
         {
-            var confirmPasswordCheck = request.Password == request.ConfirmPassword ? true : false;
-            if (!confirmPasswordCheck)
-            {
-                throw new ArgumentException("Passwords do not match");
-            }
-
             var existingUser = await _context._users.AnyAsync(u => u.Email == request.Email || u.Username == request.Username, cancellationToken);
             if (existingUser)
             {

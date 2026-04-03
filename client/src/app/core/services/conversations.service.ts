@@ -54,4 +54,10 @@ export class ConversationService {
             map(res => res.data ?? [])
         );
     }
+
+    deleteChatHistory(conversationId: number){
+        return this.http.patch<ApiResponse<boolean>>(`${this.apiUrl}/delete-chat-history`, {conversationId}).pipe(
+            map(res => res.success)
+        )
+    }
 }

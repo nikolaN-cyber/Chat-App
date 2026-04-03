@@ -27,12 +27,15 @@ export class Sidebar {
   readonly themeStore = inject(themeStore);
   readonly authStore = inject(authStore);
   private signalrService = inject(ChatSignalRService);
+  public imageBaseUrl = environment.imageBaseUrl;
 
-  readonly privateChats = computed(() =>
-    (this.conversationsStore.conversations() ?? []).filter(c => !c.isGroup)
+  readonly privateNotes = computed(() =>
+    (this.conversationsStore.conversations() ?? []).filter(c => !c.isGroup && c.participantIds.length === 1)
   );
 
-  public imageBaseUrl = environment.imageBaseUrl;
+  readonly privateChats = computed(() =>
+    (this.conversationsStore.conversations() ?? []).filter(c => !c.isGroup && c.participantIds.length > 1)
+  );
 
   readonly groupChats = computed(() =>
     (this.conversationsStore.conversations() ?? []).filter(c => c.isGroup)

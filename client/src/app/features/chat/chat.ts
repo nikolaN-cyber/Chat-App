@@ -31,7 +31,6 @@ import { SearchConversationRequest } from '../../core/models/conversation';
   styleUrl: './chat.css',
 })
 export class Chat implements OnInit, OnDestroy {
-  selectedConvTitle = signal('');
   userIsTyping = new Subject<boolean>();
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
@@ -114,8 +113,6 @@ export class Chat implements OnInit, OnDestroy {
     this.chatStore.clearIsSearching();
     this.chatStore.loadChat(id);
     this.convStore.resetUnreadCount(id);
-    const selectedConv = this.convStore.conversations()?.find(c => c.id === id);
-    this.selectedConvTitle.set(selectedConv?.title || "Private chat");
     setTimeout(() => this.scrollToBottom(), 500);
   }
 
@@ -185,10 +182,10 @@ export class Chat implements OnInit, OnDestroy {
     }
   }
 
-  deleteChat() {
-    const currentConvId = this.routeId();
-    if (currentConvId && confirm("Are you sure that you want to delete this chat?")) {
-      this.convStore.deleteConversation(currentConvId);
+  deleteChatHistory() {
+    const currentConversationId = this.routeId();
+    if (currentConversationId && confirm("Are you sure you want to delete chat history?")) {
+      this.chatStore.deleteChatHistory(currentConversationId);
     }
   }
 

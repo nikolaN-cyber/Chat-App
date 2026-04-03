@@ -33,6 +33,11 @@
                         <mat-label>Repeat Password</mat-label>
                         <input matInput formControlName="confirmPassword" placeholder="Repeat password" type="password">
                     </mat-form-field>
+                    @if (registerForm.errors?.['passwordMismatch']) {
+                        <div>
+                            Passwords do not match
+                        </div>
+                    }
                 </div>
             </mat-card-content>
             <mat-card-actions>

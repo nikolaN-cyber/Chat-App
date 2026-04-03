@@ -86,7 +86,7 @@ namespace Core.Services
             if (senderParticipation == null)
                 throw new UnauthorizedAccessException("You are not part of this conversation");
 
-            var sender = await _context._users.FirstAsync(u => u.Id == currentUserId, cancellationToken);
+            var sender = senderParticipation.User;
 
             var message = new Message
             {
@@ -104,12 +104,7 @@ namespace Core.Services
             senderParticipation.LastReadMessageId = message.Id;
             await _context.SaveChangesAsync(cancellationToken);
 
-            var recipients = conversation.Participants.Where(p => p.UserId != currentUserId).Select(p => p.User);
-
-            if (recipients == null)
-            {
-                throw new ArgumentException("Reciepents do not exist");
-            }
+            var recipients = conversation.Participants.Where(p => p.UserId != currentUserId && p.User != null).Select(p => p.User).ToList();
 
             foreach (var recipient in recipients)
             {
@@ -119,13 +114,13 @@ namespace Core.Services
                             recipient.Username,
                             sender.Username,
                             message.Content
-                        );
-
+                    );
+                    
                     _emailQueue.QueueEmail(new EmailMessage(
                             To: recipient.Email,
                             Subject: $"New message from {sender.Username}",
                             Body: emailBody
-                        ));
+                    ));
                 }
             }
 
@@ -137,7 +132,6 @@ namespace Core.Services
                 message.FileUrl,
                 message.FileType,
                 request.ConversationId
-              
             );
             return ApiResponse<MessageResponse>.SuccessResponse(response);
         }

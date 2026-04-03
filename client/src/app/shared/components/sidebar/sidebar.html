@@ -9,6 +9,20 @@
   <div class="flex-grow-1 overflow-auto">
     <mat-nav-list>
 
+      @if (privateNotes().length){
+      <div mat-subheader class="section-header">Notes</div>
+      @for (conv of privateNotes(); track conv.id){
+      <a class="conversation-container" [routerLink]="['/home/chat', conv.id]" [state]="{ data: conv }"
+        routerLinkActive="active-chat" mat-list-item>
+      <mat-icon matListItemIcon class="text-secondary">edit_note</mat-icon>
+      <div matListItemTitle class="conv-title fw-bold">
+        <div class="d-flex align-items-center gap-2">
+          <span>{{conv.title}}</span>
+        </div>
+      </div></a>
+      }
+      }
+
       @if (privateChats().length) {
       <div mat-subheader class="section-header">Direct Messages</div>
       @for (conv of privateChats(); track conv.id) {

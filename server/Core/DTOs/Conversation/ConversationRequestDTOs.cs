@@ -10,3 +10,4 @@ public record CreateConversationData(
 public record RemoveUserRequest(int UserId, int ConversationId);
 public record AddUsersRequest(List<int> UserIds, int ConversationId);
 public record SearchConversationRequest(int ConversationId, string Filter);
+public record DeleteConversationHistoryRequest(int ConversationId);

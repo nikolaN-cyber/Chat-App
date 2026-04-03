@@ -27,8 +27,5 @@ public record RegisterData(
     string Email,
     [Required(ErrorMessage = "Password is required")]
     [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
-    string Password,
-    [Required(ErrorMessage = "Confirmation password is required")]
-    [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
-    string ConfirmPassword
+    string Password
 );

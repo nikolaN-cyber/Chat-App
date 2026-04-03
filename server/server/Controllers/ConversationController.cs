@@ -79,5 +79,13 @@ namespace server.Controllers
             var response = await _conversationService.SearchConversation(request, cancellationToken);
             return Ok(response);
         }
+
+        [Authorize]
+        [HttpPatch("delete-chat-history")]
+        public async Task<IActionResult> DeleteChatHistory([FromBody] DeleteConversationHistoryRequest request, CancellationToken cancellationToken)
+        {
+            var response = await _conversationService.DeleteChatHistory(request, cancellationToken);
+            return Ok(response);
+        }
     }
 }
