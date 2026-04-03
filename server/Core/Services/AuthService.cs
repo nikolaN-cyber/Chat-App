@@ -5,6 +5,7 @@ using Core.Helpers;
 using Core.Interfaces;
 using Core.Types;
 using Domain.Entities;
+using Google.Apis.Auth;
 using Infrastructure.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -85,6 +86,50 @@ namespace Core.Services
                 user.PhotoUrl,
                 token
              ), "User successfully loged in");
+        }
+        public async Task<ApiResponse<LoginResponse>> LoginWithGoogleAsync(LoginGoogleData request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var payload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken);
+                var user = await _context._users.FirstOrDefaultAsync(u => u.GoogleId == payload.Subject);
+                if (user == null)
+                {
+                    user = new User
+                    {
+                        GoogleId = payload.Subject,
+                        Username = payload.Email.Split('@')[0],
+                        FirstName = payload.GivenName,
+                        LastName = payload.FamilyName,
+                        Email = payload.Email,
+                        RegisteredAt = DateTime.UtcNow,
+                        PhotoUrl = payload.Picture,
+                        AuthProvider = AuthProvider.Google,
+                        Password = null
+                    };
+                    _context._users.Add(user);
+                    await _context.SaveChangesAsync();
+                }
+
+                var accessToken = GenerateJwtToken(user);
+                var response = new LoginResponse
+                (
+                    user.Id,
+                    user.Username,
+                    user.FirstName,
+                    user.LastName,
+                    user.Age,
+                    user.Email,
+                    user.PhotoUrl,
+                    accessToken
+                );
+
+                return ApiResponse<LoginResponse>.SuccessResponse(response);
+            } catch (Exception ex)
+            {
+                _logger.LogError(ex, "Google login failed for token: {IdToken}", request.IdToken);
+                return ApiResponse<LoginResponse>.FailureResponse("Login failed");
+            }
         }
         private string GenerateJwtToken(User user)
         {

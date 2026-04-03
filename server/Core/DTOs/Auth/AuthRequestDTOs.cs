@@ -29,3 +29,7 @@ public record RegisterData(
     [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
     string Password
 );
+
+public record LoginGoogleData(
+    string IdToken
+);

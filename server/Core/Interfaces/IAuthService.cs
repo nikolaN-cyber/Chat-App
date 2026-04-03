@@ -7,5 +7,6 @@ namespace Core.Interfaces
     {
         Task<ApiResponse<LoginResponse>> LoginAsync(LoginData request, CancellationToken cancellationToken);
         Task<ApiResponse<bool>> RegisterAsync(RegisterData request, CancellationToken cancellationToken);
+        Task<ApiResponse<LoginResponse>> LoginWithGoogleAsync(LoginGoogleData request, CancellationToken cancellationToken);
     }
 }

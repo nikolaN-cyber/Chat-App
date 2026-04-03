@@ -33,5 +33,12 @@ namespace server.Controllers
             var result = await _authService.LoginAsync(request, cancellationToken);
             return Ok(result);
         }
+
+        [HttpPost("login-with-google")]
+        public async Task<IActionResult> LoginWithgoogle([FromBody] LoginGoogleData request, CancellationToken cancellationToken)
+        {
+            var result = await _authService.LoginWithGoogleAsync(request, cancellationToken);
+            return Ok(result);
+        }
     }
 }
