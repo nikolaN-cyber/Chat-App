@@ -131,7 +131,8 @@ namespace Core.Services
                 sender.PhotoUrl,
                 message.FileUrl,
                 message.FileType,
-                request.ConversationId
+                request.ConversationId,
+                message.Type
             );
             return ApiResponse<MessageResponse>.SuccessResponse(response);
         }

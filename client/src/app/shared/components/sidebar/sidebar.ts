@@ -8,6 +8,7 @@ import { authStore } from '../../store/auth.store';
 import { RouterLink, RouterLinkActive } from "@angular/router";
 import { environment } from '../../../../environments/environment.development';
 import { ChatSignalRService } from '../../../core/services/chat-signalr.service';
+import { chatStore } from '../../store/chat.store';
 
 @Component({
   selector: 'app-sidebar',
@@ -26,6 +27,7 @@ export class Sidebar {
   readonly conversationsStore = inject(conversationsStore);
   readonly themeStore = inject(themeStore);
   readonly authStore = inject(authStore);
+  readonly chatStore = inject(chatStore);
   private signalrService = inject(ChatSignalRService);
   public imageBaseUrl = environment.imageBaseUrl;
 

@@ -11,18 +11,20 @@ export class FileService {
     private http = inject(HttpClient);
     private apiUrl = `${environment.apiUrl}/File`;
 
-   uploadFile(file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
+    uploadFile(file: File) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const extension = file.name.split('.').pop()?.toLowerCase();
+        const fallbackType = extension ? `application/${extension}` : 'application/octet-stream';
 
-    return this.http.post<ApiResponse<{ url: string }>>(
-        `${this.apiUrl}/upload-chat-file`,
-        formData
-    ).pipe(
-        map(res => ({
-            url: res.data?.url,
-            type: file.type
-        }))
-    );
-}
+        return this.http.post<ApiResponse<{ url: string }>>(
+            `${this.apiUrl}/upload-chat-file`,
+            formData
+        ).pipe(
+            map(res => ({
+                url: res.data?.url,
+                type: file.type || fallbackType
+            }))
+        );
+    }
 }

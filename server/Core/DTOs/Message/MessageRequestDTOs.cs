@@ -3,7 +3,7 @@
 namespace Core.DTOs.Message;
 
 public record MessageData(
-    string Content,
+    string? Content,
     [Range(1, int.MaxValue, ErrorMessage = "ConversationId must be a valid integer")]
     int ConversationId,
     string? FileUrl,

@@ -111,6 +111,7 @@ export class Chat implements OnInit, OnDestroy {
 
   private async initializeChat(id: number) {
     this.chatStore.clearIsSearching();
+    this.chatStore.setIsTyping(false, '');
     this.chatStore.loadChat(id);
     this.convStore.resetUnreadCount(id);
     setTimeout(() => this.scrollToBottom(), 500);
@@ -129,12 +130,16 @@ export class Chat implements OnInit, OnDestroy {
   onSubmit() {
     const currentConvId = this.routeId();
     if (this.sendMessageForm.valid && currentConvId) {
+      const username = this.authStore.currentUser()?.username;
+      this.signalrService.sendTypingNotification(currentConvId, false, username!);
       const messagePayload = {
         content: this.sendMessageForm.controls.content.value,
         conversationId: currentConvId
       };
       this.chatStore.sendMessage(messagePayload);
       this.sendMessageForm.reset();
+
+      this.chatStore.setIsTyping(false, '');
     }
   }
 

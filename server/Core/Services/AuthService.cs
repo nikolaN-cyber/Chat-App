@@ -31,6 +31,7 @@ namespace Core.Services
             _logger = logger;
         }
 
+
         public async Task<ApiResponse<bool>> RegisterAsync(RegisterData request, CancellationToken cancellationToken)
         {
             var existingUser = await _context._users.AnyAsync(u => u.Email == request.Email || u.Username == request.Username, cancellationToken);

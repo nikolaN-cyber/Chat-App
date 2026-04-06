@@ -87,5 +87,13 @@ namespace server.Controllers
             var response = await _conversationService.DeleteChatHistory(request, cancellationToken);
             return Ok(response);
         }
+
+        [Authorize]
+        [HttpGet("get-media/{conversationId}")]
+        public async Task<IActionResult> GetMedia([FromRoute] int conversationId, CancellationToken cancellationToken)
+        {
+            var response = await _conversationService.GetMedia(conversationId, cancellationToken);
+            return Ok(response);
+        }
     }
 }

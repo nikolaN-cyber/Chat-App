@@ -42,7 +42,7 @@ namespace Core.Services
                     c.IsGroup
                         ? (c.Title ?? "Group Chat")
                         : (c.Participants.Count == 1
-                            ? "My Notes (Saved)"
+                            ? "My Notes"
                             : c.Participants
                                 .Where(p => p.UserId != currentUserId)
                                 .Select(p => p.User != null
@@ -59,7 +59,8 @@ namespace Core.Services
                             m.Author.PhotoUrl,
                             m.FileUrl,
                             m.FileType,
-                            conversationId
+                            conversationId,
+                            m.Type
                         )).ToList(),
                     c.Participants.Select( p => new ParticipantNames(p.User.Username, p.UserId, p.User.PhotoUrl)).ToList(),
                     c.AdminId
@@ -82,6 +83,35 @@ namespace Core.Services
             }
 
             return ApiResponse<ConversationDetails>.SuccessResponse(response);
+        }
+
+        public async Task<ApiResponse<List<MessageResponse>>> GetMedia(int conversationId, CancellationToken cancellationToken)
+        {
+            int currentUserId = _currentUserService.GetCurrentUserId();
+            if (currentUserId == 0) throw new UnauthorizedAccessException("Unauthorized");
+
+            var participation = await _context._participations.FirstOrDefaultAsync(p => p.UserId == currentUserId && p.ConversationId == conversationId, cancellationToken);
+
+            if (participation == null)
+                throw new UnauthorizedAccessException("You are not a participant of this conversation");
+
+            var media = await _context._messages.Where(m => m.ConversationId == conversationId && m.FileType != null && m.CreatedAt > participation.JoinedAt).OrderByDescending(m => m.CreatedAt).Select(m => 
+            new MessageResponse(
+                    m.Author.Username,
+                    m.Content,
+                    m.CreatedAt,
+                    m.Author.PhotoUrl,
+                    m.FileUrl,
+                    m.FileType,
+                    m.ConversationId,
+                    m.Type
+                )).ToListAsync(cancellationToken);
+
+            if (media == null)
+            {
+                throw new ArgumentException("Media does not exist");
+            }
+            return ApiResponse<List<MessageResponse>>.SuccessResponse(media);
         }
 
         public async Task<ApiResponse<ConversationResponse>> CreateConversation(CreateConversationData request, CancellationToken cancellationToken)
@@ -154,7 +184,7 @@ namespace Core.Services
             var newConversation = new Conversation
             {
                 IsGroup = isGroup,
-                Title = isGroup ? request.Title : (isSelfChat ? "My Notes (Saved)" : null),
+                Title = isGroup ? request.Title : (isSelfChat ? "My Notes" : null),
                 AdminId = currentUserId,
                 Participants = allParticipantIds.Select(id => new Participation
                 {
@@ -169,7 +199,7 @@ namespace Core.Services
 
             var otherUser = participantsFromDb.FirstOrDefault(u => u.Id != currentUserId);
             string finalTitle = isGroup ? (newConversation.Title ?? "Unnamed group")
-                               : (isSelfChat ? "My Notes (Saved)"
+                               : (isSelfChat ? "My Notes"
                                : (otherUser != null ? $"{otherUser.FirstName} {otherUser.LastName}".Trim() : "Private Chat"));
 
             var response = new ConversationResponse(
@@ -195,40 +225,39 @@ namespace Core.Services
             int currentUserId = _currentUserService.GetCurrentUserId();
             if (currentUserId == 0) throw new UnauthorizedAccessException("Unauthorized");
 
-            var query = _context._conversation
+            var conversations = await _context._conversation
                 .AsNoTracking()
                 .Where(c => c.Participants.Any(p => p.UserId == currentUserId))
-                .Select(c => new ConversationResponse
-                (
-                    c.Id,
-                    !c.IsGroup && c.Participants.Count == 1 && c.Participants.Any(p => p.UserId == currentUserId)
-                        ? "My Notes"
-                        : c.IsGroup
-                            ? (c.Title ?? "Group Chat")
-                            : (c.Participants
-                                .Where(p => p.UserId != currentUserId)
-                                .Select(p => (p.User.FirstName + " " + p.User.LastName).Trim())
-                                .FirstOrDefault() ?? "Private Chat"),
-                    c.IsGroup,
-                    c.Messages.Count(m => m.Id > c.Participants
+                .Select(c => new
+                {
+                    Conversation = c,
+                    LastReadId = c.Participants
                         .Where(p => p.UserId == currentUserId)
                         .Select(p => p.LastReadMessageId)
-                        .FirstOrDefault()),
-                    c.Participants.Select(p => p.UserId).ToList(),
-                    c.Participants.Select(p => p.User != null
-                        ? (p.User.FirstName ?? "User")
-                        : "Unknown").ToList(),
-                    !c.IsGroup && c.Participants.Count > 1
-                        ? c.Participants
-                            .Where(p => p.UserId != currentUserId)
-                            .Select(p => p.User.PhotoUrl)
-                            .FirstOrDefault()
-                        : null
-                ));
+                        .FirstOrDefault(),
+                    ParticipantDetails = c.Participants.Select(p => new { p.UserId, p.User.FirstName, p.User.LastName, p.User.PhotoUrl, p.User.Username }).ToList()
+                })
+                .ToListAsync(cancellationToken);
 
-            var conversations = await query.ToListAsync(cancellationToken);
+            var response = conversations.Select(x => {
+                var c = x.Conversation;
+                bool isSelfChat = x.ParticipantDetails.Count == 1 && x.ParticipantDetails.Any(p => p.UserId == currentUserId);
+                var otherUser = x.ParticipantDetails.FirstOrDefault(p => p.UserId != currentUserId);
 
-            return ApiResponse<List<ConversationResponse>>.SuccessResponse(conversations);
+                return new ConversationResponse(
+                    c.Id,
+                    !c.IsGroup && isSelfChat ? "My Notes" :
+                    c.IsGroup ? (c.Title ?? "Group Chat") :
+                    (otherUser != null ? $"{otherUser.FirstName} {otherUser.LastName}".Trim() : "Private Chat"),
+                    c.IsGroup,
+                    _context._messages.Count(m => m.ConversationId == c.Id && m.Id > x.LastReadId),
+                    x.ParticipantDetails.Select(p => p.UserId).ToList(),
+                    x.ParticipantDetails.Select(p => p.Username).ToList(),
+                    !c.IsGroup && otherUser != null ? otherUser.PhotoUrl : null
+                );
+            }).ToList();
+
+            return ApiResponse<List<ConversationResponse>>.SuccessResponse(response);
         }
 
         public async Task<ApiResponse<bool>> DeleteConversationAsync(int ConversationId, CancellationToken cancellationToken)
@@ -358,7 +387,8 @@ namespace Core.Services
                                 m.Author.PhotoUrl,
                                 m.FileUrl,
                                 m.FileType,
-                                request.ConversationId
+                                request.ConversationId,
+                                m.Type
                                 )).ToListAsync(cancellationToken);
 
             return ApiResponse<List<MessageResponse>>.SuccessResponse(messages);          

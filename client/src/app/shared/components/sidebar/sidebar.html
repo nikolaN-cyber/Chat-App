@@ -47,7 +47,7 @@
           </div>
         </div>
 
-        @if (conv.unreadCount > 0) {
+        @if (conv.unreadCount > 0 && conv.id !== chatStore.currentConversationId()) {
         <div matListItemMeta>
           <span class="badge rounded-pill bg-danger shadow-sm">
             {{ conv.unreadCount }}
@@ -70,7 +70,7 @@
           {{ conv.title }}
         </div>
 
-        @if (conv.unreadCount > 0) {
+        @if (conv.unreadCount > 0 && conv.id !== chatStore.currentConversationId()) {
         <div matListItemMeta>
           <span class="badge rounded-pill bg-danger shadow-sm">
             {{ conv.unreadCount }}

@@ -14,5 +14,6 @@ namespace Core.Interfaces
         Task<ApiResponse<List<ParticipantNames>>> AddUserAsync(AddUsersRequest request, CancellationToken cancellationToken);
         Task<ApiResponse<List<MessageResponse>>> SearchConversation(SearchConversationRequest request, CancellationToken cancellationToken);
         Task<ApiResponse<bool>> DeleteChatHistory(DeleteConversationHistoryRequest request, CancellationToken cancellationToken);
+        Task<ApiResponse<List<MessageResponse>>> GetMedia(int conversationId, CancellationToken cancellationToken);
     }
 }

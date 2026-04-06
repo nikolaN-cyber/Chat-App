@@ -1,4 +1,6 @@
-﻿namespace Core.DTOs.Message;
+﻿using Domain.Entities;
+
+namespace Core.DTOs.Message;
 
 public record MessageResponse(
     string AuthorUsername,
@@ -7,5 +9,6 @@ public record MessageResponse(
     string AuthorProfilePicture,
     string? FileUrl,
     string? FileType,
-    int ConversationId
+    int ConversationId,
+    MessageType Type
 );

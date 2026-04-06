@@ -9,11 +9,13 @@ import { tapResponse } from "@ngrx/operators";
 import { Message } from "../../core/models/message";
 import { UserService } from "../../core/services/user.service";
 import { authStore } from "./auth.store";
+import { conversationsStore } from "./conversations.store";
 
 export const chatStore = signalStore(
     { providedIn: 'root' },
     withState({
         messages: [] as MessageResponse[],
+        media: [] as MessageResponse[],
         participants: [] as ParticipantNames[],
         searchResult: [] as MessageResponse[],
         title: '' as string,
@@ -37,18 +39,26 @@ export const chatStore = signalStore(
             otherUser: computed(() => {
                 const me = auth.currentUser()?.username;
                 return store.participants().find(p => p.username !== me);
+            }),
+            files: computed(() => {
+                return store.media().filter(m => m.fileType && !m.fileType.startsWith('image'));
+            }),
+            images: computed(() => {
+                return store.media().filter(m => m.fileType && m.fileType.startsWith('image'));
             })
         }
     }),
     withMethods((store, conversationService = inject(ConversationService), userService = inject(UserService)) => ({
         loadChat: rxMethod<number>(
             pipe(
-                tap(() => patchState(store, { loading: true })),
+                tap((id) => {
+                    patchState(store, { currentConversationId: id, loading: true });
+                }),
 
                 switchMap((conversationId) => {
                     return conversationService.getConversation(conversationId).pipe(
                         tapResponse({
-                            next: (data) => { if (data) { patchState(store, { messages: data.messages, title: data.title, participants: data.participants, currentConversationId: data.id, adminId: data.adminId, loading: false, error: null }); console.log(data.title)} },
+                            next: (data) => { if (data) { patchState(store, { messages: data.messages, title: data.title, participants: data.participants, currentConversationId: data.id, adminId: data.adminId, loading: false, error: null }); } },
                             error: (err: any) => { patchState(store, { error: err.error?.message || "Error while loading messages", loading: false }) }
                         })
                     )
@@ -58,6 +68,7 @@ export const chatStore = signalStore(
         ),
         sendMessage: rxMethod<Message>(
             pipe(
+                tap(() => { patchState(store, { isTyping: false }) }),
                 switchMap((message) =>
                     userService.sendMessage(message).pipe(
                         tapResponse({
@@ -160,14 +171,27 @@ export const chatStore = signalStore(
                     conversationService.deleteChatHistory(convId).pipe(
                         tapResponse({
                             next: (data) => {
-                                if (data == true){
+                                if (data == true) {
                                     patchState(store, {
                                         messages: [],
                                         loading: false
                                     })
                                 }
                             },
-                            error: (err: any) => { patchState(store, {error: err.error?.message}) }
+                            error: (err: any) => { patchState(store, { error: err.error?.message }) }
+                        })
+                    )
+                )
+            )
+        ),
+        getMedia: rxMethod<number>(
+            pipe(
+                tap(() => patchState(store, { loading: true })),
+                switchMap((conversationId) =>
+                    conversationService.getMedia(conversationId).pipe(
+                        tapResponse({
+                            next: (data) => { patchState(store, {media: data, loading: false}); console.log("Got media: ", data) },
+                            error: (err: any) => { patchState(store, {loading: false, error: err.error?.message}) }
                         })
                     )
                 )

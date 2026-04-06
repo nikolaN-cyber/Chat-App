@@ -34,8 +34,9 @@ export class ChatSignalRService {
 
         this.hubConnection.on('ReceiveMessage', (message) => {
             const activeId = this.chatStore.currentConversationId();
-            if (message.conversationId === activeId) {
+            if (activeId && message.conversationId === activeId) {
                 this.chatStore.addMessage(message);
+                this.conversationsStore.resetUnreadCount(activeId);
             } else {
                 this.conversationsStore.incrementUnreadCount(message.conversationId);
             }

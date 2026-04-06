@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, signal, untracked } from '@angular
 import { chatStore } from '../../shared/store/chat.store';
 import { authStore } from '../../shared/store/auth.store';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { map } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { Chip } from '../../shared/components/chip/chip';
@@ -22,7 +22,12 @@ export class ChatOptions {
   readonly chatStore = inject(chatStore);
   readonly conversationStore = inject(conversationsStore)
   readonly authStore = inject(authStore);
+  router = inject(Router);
   private route = inject(ActivatedRoute);
+
+  goToFiles(){
+    this.router.navigate(['files']);
+  }
 
   routeId = toSignal(
     this.route.paramMap.pipe(
@@ -41,6 +46,7 @@ export class ChatOptions {
     const currentId = this.routeId();
     if (currentId && currentId !== this.chatStore.currentConversationId()) {
       this.chatStore.loadChat(currentId);
+      this.chatStore.getMedia(currentId);
     }
     effect(() => {
       const users = this.selectedUsers();

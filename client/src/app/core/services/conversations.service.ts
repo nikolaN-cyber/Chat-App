@@ -60,4 +60,10 @@ export class ConversationService {
             map(res => res.success)
         )
     }
+
+    getMedia(conversationId: number){
+        return this.http.get<ApiResponse<MessageResponse[]>>(`${this.apiUrl}/get-media/${conversationId}`).pipe(
+            map(res => res.data ?? [])
+        )
+    }
 }
