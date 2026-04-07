@@ -301,13 +301,44 @@ namespace Core.Services
             {
                 throw new UnauthorizedAccessException("Only admin can remove members");
             }
-            var participant = await _context._participations.FirstOrDefaultAsync(p => p.ConversationId == request.ConversationId && p.UserId == request.UserId, cancellationToken);
+            var participant = await _context._participations.Include(p => p.User).FirstOrDefaultAsync(p => p.ConversationId == request.ConversationId && p.UserId == request.UserId, cancellationToken);
             if (participant == null)
             {
                 throw new UnauthorizedAccessException("User is not participant of this conversation");
             }
+
+            var systemMessage = new Message
+            {
+                Content = $"{participant.User.Username} is removed from group",
+                Type = MessageType.UserAdded,
+                CreatedAt = DateTime.UtcNow,
+                ConversationId = request.ConversationId
+            };
+
+            _context._messages.Add(systemMessage);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            var messageToSend = new
+            {
+                id = systemMessage.Id,
+                content = systemMessage.Content,
+                type = systemMessage.Type,
+                createdAt = systemMessage.CreatedAt,
+                conversationId = systemMessage.ConversationId
+            };
+
+            await _hubContext.Clients.Group(request.ConversationId.ToString())
+                .SendAsync("UserRemoved", new
+                {
+                    userId = request.UserId,
+                    message = messageToSend
+                });
+
+            await Task.Delay(200);
+
             _context._participations.Remove(participant);
             await _context.SaveChangesAsync(cancellationToken);
+
             return ApiResponse<bool>.SuccessResponse(true);
         }
 
@@ -341,14 +372,6 @@ namespace Core.Services
                 .Select(u => new ParticipantNames(u.Username, u.Id, u.PhotoUrl))
                 .ToListAsync(cancellationToken);
 
-
-            var participations = participantsData.Select(p => new Participation
-            {
-                ConversationId = request.ConversationId,
-                UserId = p.userId,
-                JoinedAt = DateTime.UtcNow
-            });
-
             var systemMessage = new Message
             {
                 Content = $"{participantsData[0].Username} is added to group",
@@ -357,8 +380,18 @@ namespace Core.Services
                 ConversationId = request.ConversationId
             };
 
-            _context._participations.AddRange(participations);
             _context._messages.Add(systemMessage);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            var participations = participantsData.Select(p => new Participation
+            {
+                ConversationId = request.ConversationId,
+                UserId = p.userId,
+                JoinedAt = DateTime.UtcNow,
+                LastReadMessageId = systemMessage.Id
+            });
+
+            _context._participations.AddRange(participations);
             await _context.SaveChangesAsync(cancellationToken);
 
             await _hubContext.Clients.Group(request.ConversationId.ToString()).SendAsync("UserAdded", systemMessage);

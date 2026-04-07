@@ -4,12 +4,11 @@ import { MessageResponse } from "../../core/models/message";
 import { ConversationService } from "../../core/services/conversations.service";
 import { computed, inject, untracked } from "@angular/core";
 import { rxMethod } from "@ngrx/signals/rxjs-interop";
-import { debounceTime, distinctUntilChanged, EMPTY, pipe, switchMap, tap } from "rxjs";
+import { EMPTY, pipe, switchMap, tap } from "rxjs";
 import { tapResponse } from "@ngrx/operators";
 import { Message } from "../../core/models/message";
 import { UserService } from "../../core/services/user.service";
 import { authStore } from "./auth.store";
-import { conversationsStore } from "./conversations.store";
 
 export const chatStore = signalStore(
     { providedIn: 'root' },
@@ -190,13 +189,20 @@ export const chatStore = signalStore(
                 switchMap((conversationId) =>
                     conversationService.getMedia(conversationId).pipe(
                         tapResponse({
-                            next: (data) => { patchState(store, {media: data, loading: false}); console.log("Got media: ", data) },
-                            error: (err: any) => { patchState(store, {loading: false, error: err.error?.message}) }
+                            next: (data) => { patchState(store, { media: data, loading: false }); },
+                            error: (err: any) => { patchState(store, { loading: false, error: err.error?.message }) }
                         })
                     )
                 )
             )
         ),
+        updateParticipants(userId: number, action: 'add' | 'remove', newUser?: ParticipantNames) {
+            patchState(store, (state) => ({
+                participants: action === 'remove'
+                    ? state.participants.filter(p => p.userId !== userId)
+                    : newUser ? [...state.participants, newUser] : state.participants
+            }));
+        },
         addMessage(newMessage: any) {
             patchState(store, (state) => ({
                 messages: [...state.messages, newMessage]

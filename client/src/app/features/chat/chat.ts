@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, OnDestroy, OnInit, signal, untracked, ViewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, OnDestroy, OnInit, untracked, ViewChild } from '@angular/core';
 import { conversationsStore } from '../../shared/store/conversations.store';
 import { chatStore } from '../../shared/store/chat.store';
 import { authStore } from '../../shared/store/auth.store';
@@ -145,8 +145,11 @@ export class Chat implements OnInit, OnDestroy {
 
   onFileSelected(event: any) {
     const file: File = event.target.files[0];
+    const fileName = file.name;    //Add file name row in db and send/save data, show file name in chat and files page.
     const currentConvId = this.routeId();
     if (!file || !currentConvId) return;
+
+    const inputElement = event.target as HTMLInputElement;
 
     this.fileService.uploadFile(file).subscribe(fileData => {
       const messagePayload = {
@@ -156,6 +159,7 @@ export class Chat implements OnInit, OnDestroy {
         fileType: fileData.type
       };
       this.chatStore.sendMessage(messagePayload);
+      inputElement.value = '';
     });
   }
 

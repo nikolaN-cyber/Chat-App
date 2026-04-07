@@ -9,7 +9,7 @@ namespace Core.Hubs
             var userId = Context.UserIdentifier;
             if (userId != null)
             {
-                await Clients.All.SendAsync("UserStatusChanged", int.Parse(userId), true);
+                await Clients.All.SendAsync("UserStatusChanged", int.Parse(userId), true)
             }
             await base.OnConnectedAsync();
         }

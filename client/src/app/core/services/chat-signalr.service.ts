@@ -7,6 +7,8 @@ import { BehaviorSubject, filter, firstValueFrom } from "rxjs";
 import { conversationsStore } from "../../shared/store/conversations.store";
 import { ConversationResponse } from "../models/conversation";
 import { MessageResponse } from "../models/message";
+import { patchState } from "@ngrx/signals";
+import { Router } from "@angular/router";
 
 @Injectable({ providedIn: 'root' })
 export class ChatSignalRService {
@@ -14,6 +16,7 @@ export class ChatSignalRService {
     private chatStore = inject(chatStore);
     private authStore = inject(authStore);
     private conversationsStore = inject(conversationsStore);
+    private router = inject(Router);
 
     private isConnected$ = new BehaviorSubject<boolean>(false);
 
@@ -70,9 +73,20 @@ export class ChatSignalRService {
             this.chatStore.addMessage(systemMessage);
         })
 
-        this.hubConnection.on('UserRemoved', (systemMessage) => {
-            this.chatStore.addMessage(systemMessage);
-        })
+        this.hubConnection.on('UserRemoved', (data: { userId: number, message: any }) => {
+            const currentUserId = this.authStore.currentUser()?.id;
+            console.log("Hello " +  data.userId);
+            if (data.userId === currentUserId) {
+                this.conversationsStore.removeConversation(data.message.conversationId);
+                if (this.chatStore.currentConversationId() === data.message.conversationId) {
+                    this.router.navigate(['/home']);
+                }
+            }
+            else if (this.chatStore.currentConversationId() === data.message.conversationId) {
+                this.chatStore.updateParticipants(data.userId, 'remove');
+                this.chatStore.addMessage(data.message);
+            }
+        });
 
         this.hubConnection
             .start()

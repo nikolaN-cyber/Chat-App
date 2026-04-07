@@ -25,7 +25,7 @@ export class ChatOptions {
   router = inject(Router);
   private route = inject(ActivatedRoute);
 
-  goToFiles(){
+  goToFiles() {
     this.router.navigate(['files']);
   }
 
@@ -43,20 +43,21 @@ export class ChatOptions {
   })
 
   constructor() {
-    const currentId = this.routeId();
-    if (currentId && currentId !== this.chatStore.currentConversationId()) {
-      this.chatStore.loadChat(currentId);
-      this.chatStore.getMedia(currentId);
-    }
+    effect(() => {
+      const currentId = this.routeId();
+
+      if (currentId) {
+        this.chatStore.loadChat(currentId);
+        this.chatStore.getMedia(currentId);
+      }
+    });
+
     effect(() => {
       const users = this.selectedUsers();
       if (users.length > 0) {
         const ids = users.map(u => u.id);
         this.chatStore.addUsers(ids);
-
-        untracked(() => {
-          this.selectedUsers.set([]);
-        });
+        untracked(() => this.selectedUsers.set([]));
       }
     });
   }
